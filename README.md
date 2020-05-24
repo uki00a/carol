@@ -11,7 +11,7 @@ It's based on excellent works of [lorca](https://github.com/zserge/lorca) and [c
 ## Examples
 
 ```typescript
-import { launch } from "https://deno.land/x/carol@v0.0.2/mod.ts";
+import { launch } from "https://deno.land/x/carol@v0.0.3/mod.ts";
 
 const app = await launch({
   title: "Hello carol app!",
