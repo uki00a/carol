@@ -24,11 +24,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { assertEquals, assertStrictEq, assertThrowsAsync } from "./deps.ts";
+import {
+  assertEquals,
+  assertStrictEq,
+  assertThrowsAsync,
+  assert,
+} from "./deps.ts";
 import { chromeDoesNotExist } from "./test_util.ts";
 import { launch } from "./mod.ts";
 import { EvaluateError } from "./chrome.ts";
-
+import { fail } from "https://deno.land/std@0.51.0/testing/asserts.ts";
 const { test } = Deno;
 const ignore = chromeDoesNotExist;
 
@@ -54,7 +59,41 @@ test({
 
       await assertThrowsAsync(() => app.evaluate(`throw fail`), EvaluateError);
     } finally {
-      app.exit();
+      await app.exit();
+    }
+  },
+});
+
+test({
+  ignore,
+  name: "Application#exposeFunction",
+  async fn() {
+    const app = await launch({
+      width: 480,
+      height: 320,
+      args: ["--headless"],
+    });
+
+    try {
+      await app.exposeFunction("add", (a: number, b: number) => a + b);
+      await app.exposeFunction("rand", () => Math.random());
+      await app.exposeFunction("strlen", (s: string) => s.length);
+      await app.exposeFunction("atoi", (s: string) => parseInt(s));
+      await app.exposeFunction("shouldFail", () => {
+        throw "hello";
+      });
+
+      assertStrictEq(await app.evaluate(`add(2, 3)`), 5);
+      assertStrictEq(typeof await app.evaluate(`rand()`), "number");
+      assertStrictEq(await app.evaluate(`strlen('foo')`), 3);
+      assertStrictEq(await app.evaluate(`atoi('123')`), 123);
+      await assertThrowsAsync(
+        () => app.evaluate("shouldFail()"),
+        EvaluateError,
+        "hello",
+      );
+    } finally {
+      await app.exit();
     }
   },
 });

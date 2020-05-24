@@ -26,14 +26,8 @@
  */
 
 import { locateChrome } from "./locate.ts";
-import { runChrome, Chrome } from "./chrome.ts";
-
-export interface Application {
-  // load(url: string | URL): Promise<void>;
-  evaluate(expression: string): Promise<any>;
-  exit(): void;
-  // exposeFunction(): Promise<void>;
-}
+import { runChrome } from "./chrome.ts";
+import { Application, createApplication } from "./application.ts";
 
 export interface LaunchOptions {
   title?: string;
@@ -95,15 +89,4 @@ async function prepareChromeArgs(options: LaunchOptions): Promise<string[]> {
   args.push(...(options.args || []));
   args.push("--remote-debugging-port=0");
   return args;
-}
-
-function createApplication(chrome: Chrome): Application {
-  return {
-    evaluate(expression: string): Promise<any> {
-      return chrome.evaluate(expression);
-    },
-    exit() {
-      return chrome.exit();
-    },
-  };
 }
