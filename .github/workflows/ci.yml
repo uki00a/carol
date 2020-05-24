@@ -1,0 +1,17 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Install Chrome
+      run: |
+        sudo apt-get update
+        sudo apt-get install -yqq google-chrome-stable
+    - uses: denolib/setup-deno@master
+      with:
+        deno-version: 1.0.0
+    - name: Run tests
+      run: |
+        make test
