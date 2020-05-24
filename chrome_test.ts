@@ -31,18 +31,6 @@ import { locateChrome } from "./locate.ts";
 import { assert } from "https://deno.land/std@0.51.0/testing/asserts.ts";
 const { test } = Deno;
 
-//const test = async (opts: {
-//  ignore: boolean,
-//  name: string,
-//  fn: () => Promise<void>
-//}): Promise<void> => {
-//  try {
-//    await opts.fn();
-//  } finally {
-//
-//  }
-//};
-
 const chromeExecutable = await locateChrome();
 const ignore = !chromeExecutable;
 
@@ -57,15 +45,15 @@ test({
     try {
       for (
         const test of [
-          //{expr: ``, result: ``},
-          { expr: `42`, result: `42` },
-          { expr: `2+3`, result: `5` },
-          { expr: `(() => ({x: 5, y: 7}))()`, result: `{"x":5,"y":7}` },
-          { expr: `(() => ([1,'foo',false]))()`, result: `[1,"foo",false]` },
-          { expr: `((a, b) => a*b)(3, 7)`, result: `21` },
-          { expr: `Promise.resolve(42)`, result: `42` },
-          { expr: `Promise.reject('foo')`, error: `"foo"` },
-          { expr: `throw "bar"`, error: `"bar"` },
+          {expr: ``, result: undefined},
+          { expr: `42`, result: 42 },
+          { expr: `2+3`, result: 5 },
+          { expr: `(() => ({x: 5, y: 7}))()`, result: { "x": 5, "y": 7 } },
+          { expr: `(() => ([1,'foo',false]))()`, result: [1, "foo", false] },
+          { expr: `((a, b) => a*b)(3, 7)`, result: 21 },
+          { expr: `Promise.resolve(42)`, result: 42 },
+          { expr: `Promise.reject('foo')`, error: "foo" },
+          { expr: `throw "bar"`, error: "bar" },
           { expr: `2+`, error: `SyntaxError: Unexpected end of input` },
         ]
       ) {

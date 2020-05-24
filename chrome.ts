@@ -285,7 +285,7 @@ class ChromeImpl implements Chrome {
         } else if (res.result.exceptionDetails?.exception?.value != null) {
           resc.reject(
             new EvaluateError(
-              JSON.stringify(res.result.exceptionDetails.exception.value),
+              res.result.exceptionDetails.exception.value,
             ),
           );
         } else if (
@@ -294,7 +294,7 @@ class ChromeImpl implements Chrome {
         ) {
           resc.reject(new EvaluateError(res.result.result.description));
         } else if (res.result.result?.type) {
-          resc.resolve(JSON.stringify(res.result.result.value));
+          resc.resolve(res.result.result.value);
         } else {
           const message = JSON.parse(
             params.message,
