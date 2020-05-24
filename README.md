@@ -1,8 +1,12 @@
 # Carol
 
-Note: This module is **still work in progress**.
+**Note: This module is still work in progress**.
 
-This module is based on excellent works of [lorca](https://github.com/zserge/lorca) and [carlo](https://github.com/GoogleChromeLabs/carlo).
+This module is made to build desktop applications using Deno and HTML.
+
+It uses locally-installed Google Chrome to provide UI.
+
+It's based on excellent works of [lorca](https://github.com/zserge/lorca) and [carlo](https://github.com/GoogleChromeLabs/carlo).
 
 ## Examples
 
