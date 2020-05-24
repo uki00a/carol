@@ -1,8 +1,20 @@
-# Carol
-
-WIP
+# Carol (WIP)
 
 This module is based on excellent works of [lorca](https://github.com/zserge/lorca) and [carlo](https://github.com/GoogleChromeLabs/carlo).
+
+## Examples
+
+```typescript
+import { launch } from "../mod.ts";
+
+const app = await launch({
+  title: "Hello carol app!",
+  width: 480,
+  height: 320
+});
+
+await app.load("data:text/html,<div>Hello, world!</div>");
+```
 
 ## License
 
