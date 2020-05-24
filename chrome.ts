@@ -32,7 +32,7 @@ import {
   decode,
   deferred,
   Deferred,
-  sprintf
+  sprintf,
 } from "./deps.ts";
 
 interface Chrome {
@@ -65,7 +65,8 @@ class ChromeImpl implements Chrome {
   constructor(
     process: Deno.Process,
     transport: Transport,
-    logger: Logger = console) {
+    logger: Logger = console,
+  ) {
     this.#process = process;
     this.#transport = transport;
     this.#logger = logger;
@@ -76,8 +77,8 @@ class ChromeImpl implements Chrome {
     const id = 1;
     this.sendMessage(id, "Target.attachToTarget", {
       id,
-      params: { targetId }
-  	});
+      params: { targetId },
+    });
 
     while (true) {
       const message = await this.#transport.receive();
@@ -96,12 +97,14 @@ class ChromeImpl implements Chrome {
 
   async findTarget(): Promise<string> {
     this.sendMessage(0, "Target.setDiscoverTargets", {
-      params: {discover: true}
+      params: { discover: true },
     });
 
     while (true) {
       const message = await this.#transport.receive();
-      if (isTargetCreated(message) && message.params.targetInfo.type === "page") {
+      if (
+        isTargetCreated(message) && message.params.targetInfo.type === "page"
+      ) {
         return message.params.targetInfo.targetId;
       }
     }
@@ -111,7 +114,7 @@ class ChromeImpl implements Chrome {
     return this.sendMessageToTarget("Runtime.evaluate", {
       "expression": expr,
       "awaitPromise": true,
-      "returnByValue": true
+      "returnByValue": true,
     });
   }
 
@@ -136,16 +139,20 @@ class ChromeImpl implements Chrome {
           "method": method,
           "params": args,
         }),
-        "sessionId": this.#session
+        "sessionId": this.#session,
       },
     });
   }
 
-  private sendMessage(id: number, method: string, args: object = {}): Promise<object> {
+  private sendMessage(
+    id: number,
+    method: string,
+    args: object = {},
+  ): Promise<object> {
     const message = {
       id,
       method,
-      ...args
+      ...args,
     };
     this.#transport.send(message);
     const promise = deferred<object>();
@@ -157,7 +164,10 @@ class ChromeImpl implements Chrome {
     windowId: number;
     bounds: object;
   }> {
-    const msg = await this.sendMessageToTarget("Browser.getWindowForTarget", {"targetId": target});
+    const msg = await this.sendMessageToTarget(
+      "Browser.getWindowForTarget",
+      { "targetId": target },
+    );
     return msg as any; // FIXME
   }
 
@@ -166,10 +176,10 @@ class ChromeImpl implements Chrome {
   }
 
   async readLoop(): Promise<void> {
-	  while (!this.#transport.isClosed()) {
+    while (!this.#transport.isClosed()) {
       let m!: IncommingMessage;
       try {
-          m = await this.#transport.receive();
+        m = await this.#transport.receive();
       } catch (err) {
         this.#logger.error(err);
         if (this.#transport.isClosed()) {
@@ -177,7 +187,7 @@ class ChromeImpl implements Chrome {
         }
       }
 
-	  	if (m.method == "Target.receivedMessageFromTarget") {
+      if (m.method == "Target.receivedMessageFromTarget") {
         type TargetReceivedMessageFromTargetParams = {
           sessionId: string;
           message: string;
@@ -194,45 +204,52 @@ class ChromeImpl implements Chrome {
               type: string;
               subtype: string;
               value: object;
-            },
+            };
             exceptionDetails?: {
-              exception?: { value?: string }
-            }
-          }
+              exception?: { value?: string };
+            };
+          };
         };
 
         const params = m.params as TargetReceivedMessageFromTargetParams;
 
-	  		if (params.sessionId != this.#session) {
-	  			continue
+        if (params.sessionId != this.#session) {
+          continue;
         }
 
-	  		const res = JSON.parse(params.message) as TargetReceivedMessageFromTargetMessage;
-	  		if (res.id == 0 && res.method == "Runtime.consoleAPICalled" || res.method == "Runtime.exceptionThrown") {
-	  			this.#logger.log(params.message)
-	  		} else if (res.id == 0 && res.method == "Runtime.bindingCalled") {
+        const res = JSON.parse(
+          params.message,
+        ) as TargetReceivedMessageFromTargetMessage;
+        if (
+          res.id == 0 && res.method == "Runtime.consoleAPICalled" ||
+          res.method == "Runtime.exceptionThrown"
+        ) {
+          this.#logger.log(params.message);
+        } else if (res.id == 0 && res.method == "Runtime.bindingCalled") {
           type RuntimeBindingCalledParams = {
             id: number;
             name: string;
             payload: {
               name: string;
               seq: number;
-              args: object[]
-            }
+              args: object[];
+            };
           };
-          const { payload, name: bindingName, id: contextId } = (res.params as RuntimeBindingCalledParams);
-	  			const binding = this.#bindings.get(bindingName);
-	  			if (binding) {
-	  				(async () => {
+          const { payload, name: bindingName, id: contextId } =
+            (res.params as RuntimeBindingCalledParams);
+          const binding = this.#bindings.get(bindingName);
+          if (binding) {
+            (async () => {
               let result: string = "";
               let error: string = "";
               try {
                 const r = await binding!(payload.args);
                 result = JSON.stringify(r);
-              } catch(err) {
+              } catch (err) {
                 error = err.message;
               }
-	  					const expr = sprintf(`
+              const expr = sprintf(
+                `
 	  						if (%[4]s) {
 	  							window['%[1]s']['errors'].get(%[2]d)(%[4]s);
 	  						} else {
@@ -240,47 +257,61 @@ class ChromeImpl implements Chrome {
 	  						}
 	  						window['%[1]s']['callbacks'].delete(%[2]d);
 	  						window['%[1]s']['errors'].delete(%[2]d);
-                `, payload.name, payload.seq, result, error);
+                `,
+                payload.name,
+                payload.seq,
+                result,
+                error,
+              );
 
-	  					this.sendMessageToTarget("Runtime.evaluate", {
+              this.sendMessageToTarget("Runtime.evaluate", {
                 "expression": expr,
-                "contextId": contextId
+                "contextId": contextId,
               });
-	  				})();
-	  			}
-	  			continue;
-	  		}
-
-        const resc = this.#pending.get(res.id);
-	  		this.#pending.delete(res.id);
-
-	  		if (!resc) {
-	  			continue;
+            })();
+          }
+          continue;
         }
 
-	  		if (res.error?.message) {
+        const resc = this.#pending.get(res.id);
+        this.#pending.delete(res.id);
+
+        if (!resc) {
+          continue;
+        }
+
+        if (res.error?.message) {
           resc.reject(new EvaluateError(res.error!.message));
-	  		} else if (res.result.exceptionDetails?.exception?.value != null) {
-          resc.reject(new EvaluateError(JSON.stringify(res.result.exceptionDetails.exception.value)));
-	  		} else if (res.result.result?.type == "object" && res.result.result.subtype == "error") {
+        } else if (res.result.exceptionDetails?.exception?.value != null) {
+          resc.reject(
+            new EvaluateError(
+              JSON.stringify(res.result.exceptionDetails.exception.value),
+            ),
+          );
+        } else if (
+          res.result.result?.type == "object" &&
+          res.result.result.subtype == "error"
+        ) {
           resc.reject(new EvaluateError(res.result.result.description));
-	  		} else if (res.result.result?.type) {
+        } else if (res.result.result?.type) {
           resc.resolve(JSON.stringify(res.result.result.value));
-	  		} else {
-          const message = JSON.parse(params.message) as TargetReceivedMessageFromTargetMessage;
+        } else {
+          const message = JSON.parse(
+            params.message,
+          ) as TargetReceivedMessageFromTargetMessage;
           resc.resolve(message.result);
-	  		}
-	  	} else if (m.method == "Target.targetDestroyed") {
+        }
+      } else if (m.method == "Target.targetDestroyed") {
         type TargetDestroyedParams = {
-          targetId: string
+          targetId: string;
         };
         const params = m.params as TargetDestroyedParams;
-	  		if (params.targetId == this.#target) {
-	  			this.exit();
-	  			return;
-	  		}
-	  	}
-	  }
+        if (params.targetId == this.#target) {
+          this.exit();
+          return;
+        }
+      }
+    }
   }
 }
 
@@ -298,8 +329,8 @@ function isTargetCreated(x: object): x is {
     targetInfo: {
       type: string;
       targetId: string;
-    }
-  }
+    };
+  };
 } {
   return x && (x as any)["method"] === "Target.targetCreated";
 }
@@ -312,14 +343,14 @@ export interface RunChromeOptions {
 export async function runChrome(options: RunChromeOptions): Promise<Chrome> {
   const process = Deno.run({
     cmd: [options.executable, ...options.args],
-    stderr: "piped"
+    stderr: "piped",
   });
   const wsEndpoint = await waitForWSEndpoint(process.stderr!);
   const transport = await createWSTransport(wsEndpoint);
   return createChrome({
     process,
     transport,
-    headless: options.args.includes("--headless")
+    headless: options.args.includes("--headless"),
   });
 }
 
@@ -332,22 +363,27 @@ export interface CreateChromeOptions {
 export async function createChrome({
   process,
   transport,
-  headless
+  headless,
 }: CreateChromeOptions): Promise<Chrome> {
   const chrome = new ChromeImpl(process, transport);
   try {
     const targetId = await chrome.findTarget();
     await chrome.startSession(targetId);
     chrome.readLoop();
-	  for (const [method, params] of [
-      ["Page.enable"],
-	  	["Target.setAutoAttach", { "autoAttach": true, "waitForDebuggerOnStart": false }],
-	  	["Network.enable"],
-	  	["Runtime.enable"],
-	  	["Security.enable"],
-	  	["Performance.enable"],
-	  	["Log.enable"]
-    ] as Array<[string, object | undefined]>) {
+    for (
+      const [method, params] of [
+        ["Page.enable"],
+        [
+          "Target.setAutoAttach",
+          { "autoAttach": true, "waitForDebuggerOnStart": false },
+        ],
+        ["Network.enable"],
+        ["Runtime.enable"],
+        ["Security.enable"],
+        ["Performance.enable"],
+        ["Log.enable"],
+      ] as Array<[string, object | undefined]>
+    ) {
       try {
         chrome.sendMessageToTarget(method, params);
       } catch (error) {

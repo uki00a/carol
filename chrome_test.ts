@@ -25,7 +25,6 @@
  * SOFTWARE.
  */
 
-
 import { assertEquals } from "./deps.ts";
 import { runChrome, EvaluateError } from "./chrome.ts";
 import { locateChrome } from "./locate.ts";
@@ -50,24 +49,26 @@ const ignore = !chromeExecutable;
 test({
   ignore,
   name: "Chrome#evaluate",
-  async fn(){
+  async fn() {
     const chrome = await runChrome({
       executable: chromeExecutable,
-      args: ["--user-data-dir=/tmp", "--headless", "--remote-debugging-port=0"]
+      args: ["--user-data-dir=/tmp", "--headless", "--remote-debugging-port=0"],
     });
     try {
-	    for (const test of [
-        //{expr: ``, result: ``},
-	    	{expr: `42`, result: `42`},
-	    	{expr: `2+3`, result: `5`},
-	    	{expr: `(() => ({x: 5, y: 7}))()`, result: `{"x":5,"y":7}`},
-	    	{expr: `(() => ([1,'foo',false]))()`, result: `[1,"foo",false]`},
-	    	{expr: `((a, b) => a*b)(3, 7)`, result: `21`},
-	    	{expr: `Promise.resolve(42)`, result: `42`},
-	    	{expr: `Promise.reject('foo')`, error: `"foo"`},
-	    	{expr: `throw "bar"`, error: `"bar"`},
-        {expr: `2+`, error: `SyntaxError: Unexpected end of input`},
-	    ]) {
+      for (
+        const test of [
+          //{expr: ``, result: ``},
+          { expr: `42`, result: `42` },
+          { expr: `2+3`, result: `5` },
+          { expr: `(() => ({x: 5, y: 7}))()`, result: `{"x":5,"y":7}` },
+          { expr: `(() => ([1,'foo',false]))()`, result: `[1,"foo",false]` },
+          { expr: `((a, b) => a*b)(3, 7)`, result: `21` },
+          { expr: `Promise.resolve(42)`, result: `42` },
+          { expr: `Promise.reject('foo')`, error: `"foo"` },
+          { expr: `throw "bar"`, error: `"bar"` },
+          { expr: `2+`, error: `SyntaxError: Unexpected end of input` },
+        ]
+      ) {
         try {
           const result = await chrome.evaluate(test.expr);
           assertEquals(result, test.result);
@@ -76,11 +77,14 @@ test({
             throw error;
           }
           assertEquals(test.error, error.message);
-          assert(error instanceof EvaluateError, "The error should be instanceof EvaluateError");
+          assert(
+            error instanceof EvaluateError,
+            "The error should be instanceof EvaluateError",
+          );
         }
       }
     } finally {
       chrome.exit();
     }
-  }
+  },
 });

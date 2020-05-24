@@ -59,6 +59,6 @@ export async function createWSTransport(url: string): Promise<Transport> {
     send,
     close,
     isClosed,
-    receive
+    receive,
   };
 }

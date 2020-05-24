@@ -30,40 +30,40 @@ import { exists } from "./deps.ts";
 type OS = "darwin" | "linux" | "windows";
 
 export async function locateChrome(
-	os: OS = Deno.build.os,
-	env = Deno.env
+  os: OS = Deno.build.os,
+  env = Deno.env,
 ): Promise<string> {
   let paths!: string[];
   switch (os) {
-  	case "darwin":
-  		paths = [
-  			"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  			"/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
-  			"/Applications/Chromium.app/Contents/MacOS/Chromium",
-  			"/usr/bin/google-chrome-stable",
-  			"/usr/bin/google-chrome",
-  			"/usr/bin/chromium",
-  			"/usr/bin/chromium-browser",
-  		];
+    case "darwin":
+      paths = [
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
+        "/Applications/Chromium.app/Contents/MacOS/Chromium",
+        "/usr/bin/google-chrome-stable",
+        "/usr/bin/google-chrome",
+        "/usr/bin/chromium",
+        "/usr/bin/chromium-browser",
+      ];
       break;
-  	case "windows":
-  		paths = [
-  			env.get("LocalAppData") + "/Google/Chrome/Application/chrome.exe",
-  			env.get("ProgramFiles") + "/Google/Chrome/Application/chrome.exe",
-  			env.get("ProgramFiles(x86)") + "/Google/Chrome/Application/chrome.exe",
-  			env.get("LocalAppData") + "/Chromium/Application/chrome.exe",
-  			env.get("ProgramFiles") + "/Chromium/Application/chrome.exe",
-  			env.get("ProgramFiles(x86)") + "/Chromium/Application/chrome.exe",
-  		];
+    case "windows":
+      paths = [
+        env.get("LocalAppData") + "/Google/Chrome/Application/chrome.exe",
+        env.get("ProgramFiles") + "/Google/Chrome/Application/chrome.exe",
+        env.get("ProgramFiles(x86)") + "/Google/Chrome/Application/chrome.exe",
+        env.get("LocalAppData") + "/Chromium/Application/chrome.exe",
+        env.get("ProgramFiles") + "/Chromium/Application/chrome.exe",
+        env.get("ProgramFiles(x86)") + "/Chromium/Application/chrome.exe",
+      ];
       break;
-  	case "linux":
-  		paths = [
-  			"/usr/bin/google-chrome-stable",
-  			"/usr/bin/google-chrome",
-  			"/usr/bin/chromium",
-  			"/usr/bin/chromium-browser",
-  			"/snap/bin/chromium",
-  		];
+    case "linux":
+      paths = [
+        "/usr/bin/google-chrome-stable",
+        "/usr/bin/google-chrome",
+        "/usr/bin/chromium",
+        "/usr/bin/chromium-browser",
+        "/snap/bin/chromium",
+      ];
       break;
   }
 
@@ -75,4 +75,3 @@ export async function locateChrome(
 
   return "";
 }
-
