@@ -45,7 +45,7 @@ test({
     try {
       for (
         const test of [
-          {expr: ``, result: undefined},
+          { expr: ``, result: undefined },
           { expr: `42`, result: 42 },
           { expr: `2+3`, result: 5 },
           { expr: `(() => ({x: 5, y: 7}))()`, result: { "x": 5, "y": 7 } },
@@ -71,6 +71,37 @@ test({
           );
         }
       }
+    } finally {
+      chrome.exit();
+    }
+  },
+});
+
+test({
+  ignore,
+  name: "Chrome#load",
+  async fn() {
+    const chrome = await runChrome({
+      executable: chromeExecutable,
+      args: ["--user-data-dir=/tmp", "--headless", "--remote-debugging-port=0"],
+    });
+    try {
+      await chrome.load("data:text/html,<html><body>Hello</body></html>");
+
+      for (let i = 0; i < 10; i++) {
+        const url = await chrome.evaluate(`window.location.href`);
+        assertEquals(typeof url, "string", "url must be string");
+        if (url.startsWith(`"data:text/html,`)) {
+          break;
+        }
+      }
+
+      const res = await chrome.evaluate(
+        `document.body ? document.body.innerText :
+        new Promise(res => window.onload = () => res(document.body.innerText))`,
+      );
+
+      assertEquals(res, "Hello");
     } finally {
       chrome.exit();
     }
