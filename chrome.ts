@@ -38,6 +38,7 @@ import {
 interface Chrome {
   // TODO add support for passing a JS function
   evaluate(expr: string): Promise<any>;
+  bind(name: string, binding: Binding): Promise<void>;
   load(url: string): Promise<void>;
   exit(): void;
 }
@@ -121,6 +122,52 @@ class ChromeImpl implements Chrome {
 
   async load(url: string): Promise<void> {
     await this.sendMessageToTarget("Page.navigate", { "url": url });
+  }
+
+  async bind(name: string, binding: Binding): Promise<void> {
+    const bindingExists = this.#bindings.has(name);
+    this.#bindings.set(name, binding);
+    if (bindingExists) {
+      this.#bindings.set(name, binding);
+      // Just replace callback and return, as the binding was already added to js
+      // and adding it again would break it.
+      return;
+    }
+    await this.sendMessageToTarget("Runtime.addBinding", { "name": name });
+
+    const script = sprintf(
+      `(() => {
+      const bindingName = '%s';
+      const binding = window[bindingName];
+      window[bindingName] = async (...args) => {
+      	const me = window[bindingName];
+      	let errors = me['errors'];
+      	let callbacks = me['callbacks'];
+      	if (!callbacks) {
+      		callbacks = new Map();
+      		me['callbacks'] = callbacks;
+      	}
+      	if (!errors) {
+      		errors = new Map();
+      		me['errors'] = errors;
+      	}
+      	const seq = (me['lastSeq'] || 0) + 1;
+      	me['lastSeq'] = seq;
+      	const promise = new Promise((resolve, reject) => {
+      		callbacks.set(seq, resolve);
+      		errors.set(seq, reject);
+      	});
+      	binding(JSON.stringify({name: bindingName, seq, args}));
+      	return promise;
+      }})();
+      `,
+      name,
+    );
+    await this.sendMessageToTarget(
+      "Page.addScriptToEvaluateOnNewDocument",
+      { "source": script },
+    );
+    await this.evaluate(script);
   }
 
   exit() {
@@ -226,22 +273,27 @@ class ChromeImpl implements Chrome {
           params.message,
         ) as TargetReceivedMessageFromTargetMessage;
         if (
-          res.id == 0 && res.method == "Runtime.consoleAPICalled" ||
+          res.id == null && res.method == "Runtime.consoleAPICalled" ||
           res.method == "Runtime.exceptionThrown"
         ) {
           this.#logger.log(params.message);
-        } else if (res.id == 0 && res.method == "Runtime.bindingCalled") {
+        } else if (res.id == null && res.method == "Runtime.bindingCalled") {
           type RuntimeBindingCalledParams = {
             id: number;
             name: string;
-            payload: {
-              name: string;
-              seq: number;
-              args: object[];
-            };
+            payload: string;
           };
-          const { payload, name: bindingName, id: contextId } =
+          type RuntimeBindingCalledParamsPayload = {
+            name: string;
+            seq: number;
+            args: object[];
+          };
+          const { payload: payloadString, name: bindingName, id: contextId } =
             (res.params as RuntimeBindingCalledParams);
+          const payload = JSON.parse(
+            payloadString,
+          ) as RuntimeBindingCalledParamsPayload; // FIXME
+
           const binding = this.#bindings.get(bindingName);
           if (binding) {
             (async () => {
@@ -266,7 +318,7 @@ class ChromeImpl implements Chrome {
                 payload.name,
                 payload.seq,
                 result,
-                error,
+                error ? `"${error}"` : '""', // TODO Should we escape `"`?
               );
 
               this.sendMessageToTarget("Runtime.evaluate", {

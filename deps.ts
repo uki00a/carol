@@ -13,4 +13,6 @@ export { sprintf } from "https://deno.land/std@0.51.0/fmt/sprintf.ts";
 export {
   assert,
   assertEquals,
+  assertStrictEq,
+  assertThrowsAsync,
 } from "https://deno.land/std@0.51.0/testing/asserts.ts";
