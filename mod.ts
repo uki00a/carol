@@ -35,6 +35,7 @@ export interface LaunchOptions {
   height?: number;
   args?: string[];
   userDataDir?: string;
+  executablePath?: string;
 }
 
 const defaultChromeArgs = [
@@ -69,7 +70,9 @@ export async function launch(
   options: LaunchOptions = {},
 ): Promise<Application> {
   const args = await prepareChromeArgs(options);
-  const executable = await locateChrome();
+  const executable = options.executablePath
+    ? options.executablePath
+    : await locateChrome();
   const chrome = await runChrome({ executable, args });
   return createApplication(chrome);
 }
