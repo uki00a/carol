@@ -40,7 +40,7 @@ export interface Chrome {
   evaluate(expr: string): Promise<any>;
   bind(name: string, binding: Binding): Promise<void>;
   load(url: string): Promise<void>;
-  exit(): void;
+  exit(): Promise<void>;
 }
 
 interface Logger {
@@ -170,10 +170,10 @@ class ChromeImpl implements Chrome {
     await this.evaluate(script);
   }
 
-  exit() {
+  exit(): Promise<void> {
     this.#process.stderr!.close();
-    this.#transport.close();
     this.#process.close();
+    return this.#transport.close();
   }
 
   #lastId = 0;
@@ -303,7 +303,7 @@ class ChromeImpl implements Chrome {
                 const r = await binding!(payload.args);
                 result = JSON.stringify(r);
               } catch (err) {
-                error = err.message;
+                error = err instanceof Error ? err.message : String(err);
               }
               const expr = sprintf(
                 `

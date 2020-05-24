@@ -71,7 +71,7 @@ test({
         }
       }
     } finally {
-      chrome.exit();
+      await chrome.exit();
     }
   },
 });
@@ -102,7 +102,7 @@ test({
 
       assertStrictEq(res, "Hello");
     } finally {
-      chrome.exit();
+      await chrome.exit();
     }
   },
 });
@@ -135,7 +135,7 @@ test({
         EvaluateError,
       );
     } finally {
-      chrome.exit();
+      await chrome.exit();
     }
   },
 });
