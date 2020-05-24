@@ -12,7 +12,7 @@ jobs:
     - uses: denolib/setup-deno@master
       with:
         deno-version: 1.0.2
-    - name Run linter
+    - name: Run linter
       run: |
         make lint
     - name: Run tests
