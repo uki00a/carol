@@ -1,6 +1,6 @@
 # Carol
 
-[![Build Status](https://github.com/uki00a/carol/workflows/CI/badge.svg)](https://github.com/uki00a/carol/actions)
+[![Build Status](https://github.com/uki00a/carol/workflows/ci/badge.svg)](https://github.com/uki00a/carol/actions)
 ![https://img.shields.io/github/tag/uki00a/carol.svg](https://img.shields.io/github/tag/uki00a/carol.svg)
 [![license](https://img.shields.io/github/license/uki00a/carol.svg)](https://github.com/uki00a/carol)
 [![deno doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https/deno.land/x/carol/mod.ts)
