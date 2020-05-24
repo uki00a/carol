@@ -28,11 +28,12 @@ import {
   assertEquals,
   assertStrictEq,
   assertThrowsAsync,
+  assert,
 } from "./deps.ts";
 import { chromeDoesNotExist } from "./test_util.ts";
 import { launch } from "./mod.ts";
 import { EvaluateError } from "./chrome.ts";
-import { assert } from "https://deno.land/std@0.51.0/testing/asserts.ts";
+
 const { test } = Deno;
 const ignore = chromeDoesNotExist;
 
@@ -115,5 +116,20 @@ test({
     await app.exit();
 
     assert(called);
+  },
+});
+
+test({
+  ignore,
+  name: "custom executablePath",
+  async fn() {
+    await assertThrowsAsync(async () => {
+      await launch({
+        executablePath: "/",
+        width: 480,
+        height: 320,
+        args: ["--headless"],
+      });
+    }, Deno.errors.PermissionDenied); // TODO Is this correct? (PermissionDenied)
   },
 });
