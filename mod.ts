@@ -25,11 +25,14 @@
  * SOFTWARE.
  */
 
-import { locateChrome } "./locate.ts";
+import { locateChrome } from "./locate.ts";
+import { runChrome, Chrome } from "./chrome.ts";
 
 export interface Application {
-  load(url: string | URL): Promise<void>;
-  exposeFunction(): Promise<void>;
+  // load(url: string | URL): Promise<void>;
+  evaluate(expression: string): Promise<any>;
+  exit(): void;
+  // exposeFunction(): Promise<void>;
 }
 
 export interface LaunchOptions {
@@ -41,40 +44,44 @@ export interface LaunchOptions {
 }
 
 const defaultChromeArgs = [
-	"--disable-background-networking",
-	"--disable-background-timer-throttling",
-	"--disable-backgrounding-occluded-windows",
-	"--disable-breakpad",
-	"--disable-client-side-phishing-detection",
-	"--disable-default-apps",
-	"--disable-dev-shm-usage",
-	"--disable-infobars",
-	"--disable-extensions",
-	"--disable-features=site-per-process",
-	"--disable-hang-monitor",
-	"--disable-ipc-flooding-protection",
-	"--disable-popup-blocking",
-	"--disable-prompt-on-repost",
-	"--disable-renderer-backgrounding",
-	"--disable-sync",
-	"--disable-translate",
-	"--disable-windows10-custom-titlebar",
-	"--metrics-recording-only",
-	"--no-first-run",
-	"--no-default-browser-check",
-	"--safebrowsing-disable-auto-update",
-	"--enable-automation",
-	"--password-store=basic",
-	"--use-mock-keychain",
+  "--disable-background-networking",
+  "--disable-background-timer-throttling",
+  "--disable-backgrounding-occluded-windows",
+  "--disable-breakpad",
+  "--disable-client-side-phishing-detection",
+  "--disable-default-apps",
+  "--disable-dev-shm-usage",
+  "--disable-infobars",
+  "--disable-extensions",
+  "--disable-features=site-per-process",
+  "--disable-hang-monitor",
+  "--disable-ipc-flooding-protection",
+  "--disable-popup-blocking",
+  "--disable-prompt-on-repost",
+  "--disable-renderer-backgrounding",
+  "--disable-sync",
+  "--disable-translate",
+  "--disable-windows10-custom-titlebar",
+  "--metrics-recording-only",
+  "--no-first-run",
+  "--no-default-browser-check",
+  "--safebrowsing-disable-auto-update",
+  "--enable-automation",
+  "--password-store=basic",
+  "--use-mock-keychain",
 ];
 
-export async function launch(options: LaunchOptions = {}) {
+export async function launch(
+  options: LaunchOptions = {},
+): Promise<Application> {
   const args = await prepareChromeArgs(options);
-  console.log(args);
+  const executable = await locateChrome();
+  const chrome = await runChrome({ executable, args });
+  return createApplication(chrome);
 }
 
 async function prepareChromeArgs(options: LaunchOptions): Promise<string[]> {
-  const args = [...defaultChromeArgs];  
+  const args = [...defaultChromeArgs];
   args.push(`--app=${options.title || "Carol"}`);
   if (options.userDataDir == null) {
     const tempDir = await Deno.makeTempDir({ prefix: "carol" });
@@ -88,4 +95,15 @@ async function prepareChromeArgs(options: LaunchOptions): Promise<string[]> {
   args.push(...(options.args || []));
   args.push("--remote-debugging-port=0");
   return args;
+}
+
+function createApplication(chrome: Chrome): Application {
+  return {
+    evaluate(expression: string): Promise<any> {
+      return chrome.evaluate(expression);
+    },
+    exit() {
+      return chrome.exit();
+    },
+  };
 }

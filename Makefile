@@ -1,3 +1,3 @@
 .PHONY: test
 test:
-	deno test --allow-env --allow-read --allow-run --allow-net ./chrome_test.ts
+	deno test --allow-env --allow-read --allow-write --allow-run --allow-net

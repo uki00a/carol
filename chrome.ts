@@ -35,7 +35,7 @@ import {
   sprintf,
 } from "./deps.ts";
 
-interface Chrome {
+export interface Chrome {
   // TODO add support for passing a JS function
   evaluate(expr: string): Promise<any>;
   bind(name: string, binding: Binding): Promise<void>;
