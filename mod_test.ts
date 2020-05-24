@@ -28,12 +28,10 @@ import {
   assertEquals,
   assertStrictEq,
   assertThrowsAsync,
-  assert,
 } from "./deps.ts";
 import { chromeDoesNotExist } from "./test_util.ts";
 import { launch } from "./mod.ts";
 import { EvaluateError } from "./chrome.ts";
-import { fail } from "https://deno.land/std@0.51.0/testing/asserts.ts";
 const { test } = Deno;
 const ignore = chromeDoesNotExist;
 
