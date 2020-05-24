@@ -27,12 +27,11 @@
 
 import { assertEquals, assertStrictEq, assertThrowsAsync } from "./deps.ts";
 import { runChrome, EvaluateError } from "./chrome.ts";
-import { locateChrome } from "./locate.ts";
+import { chromeDoesNotExist, chromeExecutable } from "./test_util.ts";
 import { assert } from "https://deno.land/std@0.51.0/testing/asserts.ts";
 const { test } = Deno;
 
-const chromeExecutable = await locateChrome();
-const ignore = !chromeExecutable;
+const ignore = chromeDoesNotExist;
 
 test({
   ignore,
