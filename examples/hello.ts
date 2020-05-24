@@ -26,5 +26,7 @@ const app = await launch({
   height: 320,
 });
 
+app.onExit().then(() => Deno.exit(0));
+
 await app.exposeFunction("greet", (name: string) => `Hello, ${name}!`);
 await app.load(`http://${address}`);

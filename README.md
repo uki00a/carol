@@ -11,13 +11,15 @@ It's based on excellent works of [lorca](https://github.com/zserge/lorca) and [c
 ## Examples
 
 ```typescript
-import { launch } from "../mod.ts";
+import { launch } from "https://deno.land/x/carol@v0.0.2/mod.ts";
 
 const app = await launch({
   title: "Hello carol app!",
   width: 480,
   height: 320
 });
+
+app.onExit().then(() => Deno.exit(0));
 
 await app.load("data:text/html,<div>Hello, world!</div>");
 ```

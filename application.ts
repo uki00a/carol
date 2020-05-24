@@ -5,6 +5,7 @@ export interface Application {
   evaluate(expression: string): Promise<any>;
   exit(): Promise<void>;
   exposeFunction(name: string, binding: (...args: any[]) => any): Promise<void>;
+  onExit(): Promise<void>;
 }
 
 export function createApplication(chrome: Chrome): Application {
@@ -15,11 +16,14 @@ export function createApplication(chrome: Chrome): Application {
     evaluate(expression: string): Promise<any> {
       return chrome.evaluate(expression);
     },
-    exit() {
-      return chrome.exit();
+    async exit() {
+      await chrome.exit();
     },
     exposeFunction(name: string, binding: (...args: any[]) => any) {
       return chrome.bind(name, (args) => binding(...args));
+    },
+    onExit() {
+      return chrome.onExit();
     },
   };
 }

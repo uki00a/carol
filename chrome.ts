@@ -41,6 +41,7 @@ export interface Chrome {
   bind(name: string, binding: Binding): Promise<void>;
   load(url: string): Promise<void>;
   exit(): Promise<void>;
+  onExit(): Promise<void>;
 }
 
 interface Logger {
@@ -59,6 +60,7 @@ class ChromeImpl implements Chrome {
 
   #pending: Map<number, Deferred<any>> = new Map();
   #bindings: Map<string, Binding> = new Map();
+  #exitPromise: Deferred<void> = deferred();
 
   #target!: string;
   #session!: string;
@@ -170,10 +172,15 @@ class ChromeImpl implements Chrome {
     await this.evaluate(script);
   }
 
-  exit(): Promise<void> {
+  async exit(): Promise<void> {
     this.#process.stderr!.close();
     this.#process.close();
-    return this.#transport.close();
+    await this.#transport.close();
+    this.#exitPromise.resolve();
+  }
+
+  onExit(): Promise<void> {
+    return this.#exitPromise;
   }
 
   #lastId = 0;
@@ -364,8 +371,7 @@ class ChromeImpl implements Chrome {
         };
         const params = m.params as TargetDestroyedParams;
         if (params.targetId == this.#target) {
-          this.exit();
-          return;
+          await this.exit();
         }
       }
     }
