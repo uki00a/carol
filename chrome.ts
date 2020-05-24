@@ -38,6 +38,7 @@ import {
 interface Chrome {
   // TODO add support for passing a JS function
   evaluate(expr: string): Promise<any>;
+  load(url: string): Promise<void>;
   exit(): void;
 }
 
@@ -116,6 +117,10 @@ class ChromeImpl implements Chrome {
       "awaitPromise": true,
       "returnByValue": true,
     });
+  }
+
+  async load(url: string): Promise<void> {
+    await this.sendMessageToTarget("Page.navigate", { "url": url });
   }
 
   exit() {
