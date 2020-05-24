@@ -32,6 +32,7 @@ import {
 import { chromeDoesNotExist } from "./test_util.ts";
 import { launch } from "./mod.ts";
 import { EvaluateError } from "./chrome.ts";
+import { assert } from "https://deno.land/std@0.51.0/testing/asserts.ts";
 const { test } = Deno;
 const ignore = chromeDoesNotExist;
 
@@ -93,5 +94,26 @@ test({
     } finally {
       await app.exit();
     }
+  },
+});
+
+test({
+  ignore,
+  name: "Application#onExit",
+  async fn() {
+    const app = await launch({
+      width: 480,
+      height: 320,
+      args: ["--headless"],
+    });
+
+    let called = false;
+    app.onExit().then(() => {
+      called = true;
+    });
+
+    await app.exit();
+
+    assert(called);
   },
 });
