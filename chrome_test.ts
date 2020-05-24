@@ -25,7 +25,7 @@
  * SOFTWARE.
  */
 
-import { assertEquals } from "./deps.ts";
+import { assertEquals, assertStrictEq, assertThrowsAsync } from "./deps.ts";
 import { runChrome, EvaluateError } from "./chrome.ts";
 import { locateChrome } from "./locate.ts";
 import { assert } from "https://deno.land/std@0.51.0/testing/asserts.ts";
@@ -90,7 +90,7 @@ test({
 
       for (let i = 0; i < 10; i++) {
         const url = await chrome.evaluate(`window.location.href`);
-        assertEquals(typeof url, "string", "url must be string");
+        assertStrictEq(typeof url, "string", "url must be string");
         if (url.startsWith(`"data:text/html,`)) {
           break;
         }
@@ -101,7 +101,40 @@ test({
         new Promise(res => window.onload = () => res(document.body.innerText))`,
       );
 
-      assertEquals(res, "Hello");
+      assertStrictEq(res, "Hello");
+    } finally {
+      chrome.exit();
+    }
+  },
+});
+
+test({
+  ignore,
+  name: "Chrome#bind",
+  async fn() {
+    const chrome = await runChrome({
+      executable: chromeExecutable,
+      args: ["--user-data-dir=/tmp", "--headless", "--remote-debugging-port=0"],
+    });
+    try {
+      await chrome.bind("add", (args: any[]): number => {
+        assertStrictEq(args.length, 2, "2 arguments expected");
+        assertStrictEq(typeof args[0], "number");
+        assertStrictEq(typeof args[1], "number");
+        const [a, b] = args;
+        return a + b;
+      });
+      const res = await chrome.evaluate(`window.add(2, 3)`);
+      assertStrictEq(res, 5);
+
+      await assertThrowsAsync(
+        () => chrome.evaluate(`window.add("foo", "bar")`),
+        EvaluateError,
+      );
+      await assertThrowsAsync(
+        () => chrome.evaluate(`window.add(1, 2, 3)`),
+        EvaluateError,
+      );
     } finally {
       chrome.exit();
     }
