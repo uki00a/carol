@@ -325,7 +325,7 @@ class ChromeImpl implements Chrome {
                 payload.name,
                 payload.seq,
                 result,
-                error ? `"${error}"` : '""', // TODO Should we escape `"`?
+                error ? JSON.stringify(error) : '""',
               );
 
               this.sendMessageToTarget("Runtime.evaluate", {

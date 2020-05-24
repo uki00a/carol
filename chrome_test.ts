@@ -130,6 +130,7 @@ test({
         () => chrome.evaluate(`window.add("foo", "bar")`),
         EvaluateError,
       );
+
       await assertThrowsAsync(
         () => chrome.evaluate(`window.add(1, 2, 3)`),
         EvaluateError,
