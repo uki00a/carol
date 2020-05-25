@@ -130,7 +130,6 @@ class ChromeImpl implements Chrome {
     const bindingExists = this.#bindings.has(name);
     this.#bindings.set(name, binding);
     if (bindingExists) {
-      this.#bindings.set(name, binding);
       // Just replace callback and return, as the binding was already added to js
       // and adding it again would break it.
       return;
