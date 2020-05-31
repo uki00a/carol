@@ -31,5 +31,5 @@ await app.load("data:text/html,<div>Hello, world!</div>");
 
 ## License
 
-- This module contains substantial parts based on other libraries. They have preserved their individual licenses and copyrights. Eveything is licensed under the MIT license.
+- This module contains substantial parts based on other libraries. They have preserved their individual licenses and copyrights.
 - Additional work with this module is licensed under the MIT license.
