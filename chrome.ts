@@ -1,5 +1,5 @@
 /**
- * Substantial parts adapted from https://github.com/zserge/lorca/blob/a3e43396a47ea152501d3453514c7f373cea530a/chrome.go
+ * This file contains the code adapted from https://github.com/zserge/lorca/blob/a3e43396a47ea152501d3453514c7f373cea530a/chrome.go
  * which is licensed as follows:
  *
  * MIT License
@@ -23,15 +23,40 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *
+ *
+ * This file contains the code adapted from the folling urls:
+ * * https://github.com/GoogleChromeLabs/carlo/blob/8f2cbfedf381818792017fe53651fe07f270bb96/lib/carlo.js
+ * * https://github.com/GoogleChromeLabs/carlo/blob/8f2cbfedf381818792017fe53651fe07f270bb96/lib/http_request.js
+ * They are licensed as follows:
+ *
+ * Copyright 2018 Google Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the 'License');
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an 'AS IS' BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 import { Transport, createWSTransport, IncommingMessage } from "./transport.ts";
 import {
   assert,
   BufReader,
+  concat,
   decode,
   deferred,
   Deferred,
+  encode,
+  encodeToBase64,
+  exists,
+  join,
   sprintf,
 } from "./deps.ts";
 
@@ -40,18 +65,33 @@ export interface Chrome {
   evaluate(expr: string): Promise<any>;
   bind(name: string, binding: Binding): Promise<void>;
   load(url: string): Promise<void>;
+  serveFolder(folder: string, prefix?: string): void;
+  serveOrigin(base: string, prefix?: string): void;
   exit(): Promise<void>;
   onExit(): Promise<void>;
 }
 
 interface Logger {
-  log(message: any): void;
-  error(message: any): void;
+  log(message: any, ...args: any[]): void;
+  error(message: any, ...args: any[]): void;
+  debug(message: any, ...args: any[]): void;
 }
 
 type Binding = (args: any[]) => any;
+type HTTPHeaders = { [header: string]: any };
+
+interface Request {
+  url: string;
+  method: string;
+  headers: object;
+  resourceType: string;
+  interceptionId: unknown;
+  rawResponse: string;
+}
 
 export class EvaluateError extends Error {}
+
+const DUMMY_URL = new URL("https://domain/");
 
 class ChromeImpl implements Chrome {
   #process: Deno.Process;
@@ -61,6 +101,8 @@ class ChromeImpl implements Chrome {
   #pending: Map<number, Deferred<any>> = new Map();
   #bindings: Map<string, Binding> = new Map();
   #exitPromise: Deferred<void> = deferred();
+  #www: Array<{ prefix: string; folder?: string; baseURL?: URL }> = [];
+  #requestInterceptionEnabled = false;
 
   #target!: string;
   #session!: string;
@@ -123,7 +165,168 @@ class ChromeImpl implements Chrome {
   }
 
   async load(url: string): Promise<void> {
-    await this.sendMessageToTarget("Page.navigate", { "url": url });
+    await this.enableRequestInterception();
+    await this.sendMessageToTarget(
+      "Page.navigate",
+      { "url": new URL(url, DUMMY_URL).toString() },
+    );
+  }
+
+  /**
+   * This method is adopted from https://github.com/GoogleChromeLabs/carlo/blob/8f2cbfedf381818792017fe53651fe07f270bb96/lib/carlo.js.
+   * @param {string=} folder Folder with the web content.
+   * @param {string=} prefix Only serve folder for requests with given prefix.
+   */
+  serveFolder(folder: string, prefix: string = ""): void {
+    this.#www.push({ folder, prefix: wrapPrefix(prefix) });
+  }
+
+  /**
+   * This method is adopted from https://github.com/GoogleChromeLabs/carlo/blob/8f2cbfedf381818792017fe53651fe07f270bb96/lib/carlo.js.
+   *
+   * Serves pages from given origin, eg `http://localhost:8080`.
+   * This can be used for the fast development mode available in web frameworks.
+   *
+   * @param {string} base
+   * @param {string=} prefix Only serve folder for requests with given prefix.
+   */
+  serveOrigin(base: string, prefix = "") {
+    this.#www.push(
+      { baseURL: new URL(base + "/"), prefix: wrapPrefix(prefix) },
+    );
+  }
+
+  private async enableRequestInterception(): Promise<void> {
+    if (this.shouldEnableRequestInterception()) {
+      this.#requestInterceptionEnabled = true;
+      await this.sendMessageToTarget(
+        "Network.setRequestInterception",
+        { patterns: [{ urlPattern: "*" }] },
+      );
+    }
+  }
+
+  /**
+   * This method is based on `Window#_handleRequest_`
+   * @see https://github.com/GoogleChromeLabs/carlo/blob/8f2cbfedf381818792017fe53651fe07f270bb96/lib/carlo.js
+   */
+  private async handleRequestIntercepted(params: {
+    request: Request;
+  }) {
+    const { request } = params;
+    const url = new URL(request.url);
+    this.#logger.debug(`request url: ${url}`);
+
+    if (url.hostname !== DUMMY_URL.hostname) {
+      this.deferRequestToBrowser(request);
+      return;
+    }
+
+    const urlpathname = url.pathname;
+    for (const entry of this.#www) {
+      const { prefix } = entry;
+      this.#logger.debug("prefix: " + prefix);
+      if (!urlpathname.startsWith(prefix)) {
+        continue;
+      }
+
+      const pathname = urlpathname.substr(prefix.length);
+      this.#logger.debug("pathname: " + pathname);
+      if (entry.baseURL != null) {
+        this.deferRequestToBrowser(
+          request,
+          { url: String(new URL(pathname, entry.baseURL)) },
+        );
+        return;
+      }
+
+      const folder = entry.folder;
+      assert(folder != null);
+      const fileName = join(folder, pathname);
+      if (!await exists(fileName)) {
+        continue;
+      }
+
+      const headers = { "content-type": contentType(request, fileName) };
+      const body = await Deno.readFile(fileName);
+      this.fullfillRequest({ request, headers, body });
+      return;
+    }
+    this.deferRequestToBrowser(request);
+  }
+
+  /**
+   * This methos is based on `Request#deferToBrowser`
+   * @see https://github.com/GoogleChromeLabs/carlo/blob/8f2cbfedf381818792017fe53651fe07f270bb96/lib/http_request.js
+   */
+  private deferRequestToBrowser(
+    base: Request,
+    overrides: Partial<Request> = {},
+  ) {
+    this.#logger.debug("deferRequestToBrowser:", overrides);
+    return this.resolveRequest({ ...base, ...overrides });
+  }
+
+  /**
+   * This methos is based on `Request#fullfill`
+   * @see https://github.com/GoogleChromeLabs/carlo/blob/8f2cbfedf381818792017fe53651fe07f270bb96/lib/http_request.js
+   */
+  private fullfillRequest({
+    request,
+    headers,
+    body,
+    status = 200,
+  }: {
+    request: Request;
+    headers: HTTPHeaders;
+    body: Uint8Array;
+    status?: number;
+  }) {
+    this.#logger.debug("fulfill", request.url);
+    const responseHeaders = {} as HTTPHeaders;
+    if (headers) {
+      for (const header of Object.keys(headers)) {
+        responseHeaders[header.toLowerCase()] = headers[header];
+      }
+    }
+    if (body && !("content-length" in responseHeaders)) {
+      responseHeaders["content-length"] = body.byteLength;
+    }
+
+    const statusText = statusTexts[status] || "";
+    const statusLine = `HTTP/1.1 ${status} ${statusText}`;
+
+    const CRLF = "\r\n";
+    let text = statusLine + CRLF;
+    for (const header of Object.keys(responseHeaders)) {
+      text += header + ": " + responseHeaders[header] + CRLF;
+    }
+    text += CRLF;
+    let responseBuffer = encode(text);
+    if (body) {
+      responseBuffer = concat(responseBuffer, body);
+    }
+
+    return this.resolveRequest({
+      interceptionId: request.interceptionId,
+      rawResponse: encodeToBase64(responseBuffer),
+    });
+  }
+
+  /**
+   * This methos is based on `Request#resolve_`
+   * @see https://github.com/GoogleChromeLabs/carlo/blob/8f2cbfedf381818792017fe53651fe07f270bb96/lib/http_request.js
+   */
+  private resolveRequest(request: Partial<Request>) {
+    this.#logger.debug("resolveRequest:", request.url);
+    return this.sendMessageToTarget(
+      "Network.continueInterceptedRequest",
+      request,
+    );
+  }
+
+  private shouldEnableRequestInterception(): boolean {
+    return !this.#requestInterceptionEnabled && this.#www.length > 0;
   }
 
   async bind(name: string, binding: Binding): Promise<void> {
@@ -279,6 +482,7 @@ class ChromeImpl implements Chrome {
         const res = JSON.parse(
           params.message,
         ) as TargetReceivedMessageFromTargetMessage;
+
         if (
           res.id == null && res.method == "Runtime.consoleAPICalled" ||
           res.method == "Runtime.exceptionThrown"
@@ -335,6 +539,9 @@ class ChromeImpl implements Chrome {
             })();
           }
           continue;
+        } else if (res.method === "Network.requestIntercepted") {
+          this.handleRequestIntercepted(res.params as any); // FIXME
+          continue;
         }
 
         const resc = this.#pending.get(res.id);
@@ -345,6 +552,7 @@ class ChromeImpl implements Chrome {
         }
 
         if (res.error?.message) {
+          console.log(m);
           resc.reject(new EvaluateError(res.error!.message));
         } else if (res.result.exceptionDetails?.exception?.value != null) {
           resc.reject(
@@ -488,3 +696,111 @@ async function waitForWSEndpoint(r: Deno.Reader): Promise<string> {
     }
   }
 }
+
+function wrapPrefix(prefix: string): string {
+  if (!prefix.startsWith("/")) prefix = "/" + prefix;
+  if (!prefix.endsWith("/")) prefix += "/";
+  return prefix;
+}
+
+const imageContentTypes = new Map([
+  ["jpeg", "image/jpeg"],
+  ["jpg", "image/jpeg"],
+  ["svg", "image/svg+xml"],
+  ["gif", "image/gif"],
+  ["webp", "image/webp"],
+  ["png", "image/png"],
+  ["ico", "image/ico"],
+  ["tiff", "image/tiff"],
+  ["tif", "image/tiff"],
+  ["bmp", "image/bmp"],
+]);
+
+const fontContentTypes = new Map([
+  ["ttf", "font/opentype"],
+  ["otf", "font/opentype"],
+  ["ttc", "font/opentype"],
+  ["woff", "application/font-woff"],
+]);
+
+function contentType(request: Request, fileName: string): string {
+  const dotIndex = fileName.lastIndexOf(".");
+  const extension = fileName.substr(dotIndex + 1);
+  switch (request.resourceType) {
+    case "Document":
+      return "text/html";
+    case "Script":
+      return "text/javascript";
+    case "Stylesheet":
+      return "text/css";
+    case "Image":
+      return imageContentTypes.get(extension) || "image/png";
+    case "Font":
+      return fontContentTypes.get(extension) || "application/font-woff";
+    default:
+      assert(false, "Unexpected resource type: " + request.resourceType);
+  }
+}
+
+const statusTexts = {
+  "100": "Continue",
+  "101": "Switching Protocols",
+  "102": "Processing",
+  "200": "OK",
+  "201": "Created",
+  "202": "Accepted",
+  "203": "Non-Authoritative Information",
+  "204": "No Content",
+  "206": "Partial Content",
+  "207": "Multi-Status",
+  "208": "Already Reported",
+  "209": "IM Used",
+  "300": "Multiple Choices",
+  "301": "Moved Permanently",
+  "302": "Found",
+  "303": "See Other",
+  "304": "Not Modified",
+  "305": "Use Proxy",
+  "306": "Switch Proxy",
+  "307": "Temporary Redirect",
+  "308": "Permanent Redirect",
+  "400": "Bad Request",
+  "401": "Unauthorized",
+  "402": "Payment Required",
+  "403": "Forbidden",
+  "404": "Not Found",
+  "405": "Method Not Allowed",
+  "406": "Not Acceptable",
+  "407": "Proxy Authentication Required",
+  "408": "Request Timeout",
+  "409": "Conflict",
+  "410": "Gone",
+  "411": "Length Required",
+  "412": "Precondition Failed",
+  "413": "Payload Too Large",
+  "414": "URI Too Long",
+  "415": "Unsupported Media Type",
+  "416": "Range Not Satisfiable",
+  "417": "Expectation Failed",
+  "418": "I'm a teapot",
+  "421": "Misdirected Request",
+  "422": "Unprocessable Entity",
+  "423": "Locked",
+  "424": "Failed Dependency",
+  "426": "Upgrade Required",
+  "428": "Precondition Required",
+  "429": "Too Many Requests",
+  "431": "Request Header Fields Too Large",
+  "451": "Unavailable For Legal Reasons",
+  "500": "Internal Server Error",
+  "501": "Not Implemented",
+  "502": "Bad Gateway",
+  "503": "Service Unavailable",
+  "504": "Gateway Timeout",
+  "505": "HTTP Version Not Supported",
+  "506": "Variant Also Negotiates",
+  "507": "Insufficient Storage",
+  "508": "Loop Detected",
+  "510": "Not Extended",
+  "511": "Network Authentication Required",
+} as { [status: string]: string };

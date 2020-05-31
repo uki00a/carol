@@ -1,6 +1,10 @@
 export { exists } from "https://deno.land/std@0.53.0/fs/exists.ts";
+export { join } from "https://deno.land/std@0.53.0/path/mod.ts";
 export { BufReader } from "https://deno.land/std@0.53.0/io/bufio.ts";
-export { decode } from "https://deno.land/std@0.53.0/encoding/utf8.ts";
+export { concat } from "https://deno.land/std@0.53.0/bytes/mod.ts";
+export { decode, encode } from "https://deno.land/std@0.53.0/encoding/utf8.ts";
+// FIXME
+export { encode as encodeToBase64 } from "https://deno.land/std@0.54.0/encoding/base64.ts";
 export {
   deferred,
   Deferred,

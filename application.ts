@@ -5,6 +5,8 @@ export interface Application {
   evaluate(expression: string): Promise<any>;
   exit(): Promise<void>;
   exposeFunction(name: string, binding: (...args: any[]) => any): Promise<void>;
+  serveFolder(folder: string, prefix?: string): void;
+  serveOrigin(base: string, prefix?: string): void;
   onExit(): Promise<void>;
 }
 
@@ -21,6 +23,12 @@ export function createApplication(chrome: Chrome): Application {
     },
     exposeFunction(name: string, binding: (...args: any[]) => any) {
       return chrome.bind(name, (args) => binding(...args));
+    },
+    serveFolder(folder: string, prefix?: string) {
+      return chrome.serveFolder(folder, prefix);
+    },
+    serveOrigin(base: string, prefix?: string) {
+      return chrome.serveOrigin(base, prefix);
     },
     onExit() {
       return chrome.onExit();
