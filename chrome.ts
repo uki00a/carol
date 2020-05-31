@@ -47,6 +47,7 @@
  */
 
 import { Transport, createWSTransport, IncommingMessage } from "./transport.ts";
+import { Logger, createLogger } from "./logger.ts";
 import {
   assert,
   BufReader,
@@ -70,12 +71,6 @@ export interface Chrome {
   serveOrigin(base: string, prefix?: string): void;
   exit(): Promise<void>;
   onExit(): Promise<void>;
-}
-
-interface Logger {
-  log(message: any, ...args: any[]): void;
-  error(message: any, ...args: any[]): void;
-  debug(message: any, ...args: any[]): void;
 }
 
 type Binding = (args: any[]) => any;
@@ -110,7 +105,7 @@ class ChromeImpl implements Chrome {
   constructor(
     process: Deno.Process,
     transport: Transport,
-    logger: Logger = console,
+    logger: Logger,
   ) {
     this.#process = process;
     this.#transport = transport;
@@ -630,9 +625,11 @@ export async function runChrome(options: RunChromeOptions): Promise<Chrome> {
   });
   const wsEndpoint = await waitForWSEndpoint(process.stderr!);
   const transport = await createWSTransport(wsEndpoint);
+  const logger = createLogger();
   return createChrome({
     process,
     transport,
+    logger,
     headless: options.args.includes("--headless"),
   });
 }
@@ -640,15 +637,17 @@ export async function runChrome(options: RunChromeOptions): Promise<Chrome> {
 export interface CreateChromeOptions {
   process: Deno.Process;
   transport: Transport;
+  logger: Logger;
   headless: boolean;
 }
 
 export async function createChrome({
   process,
   transport,
+  logger,
   headless,
 }: CreateChromeOptions): Promise<Chrome> {
-  const chrome = new ChromeImpl(process, transport);
+  const chrome = new ChromeImpl(process, transport, logger);
   try {
     const targetId = await chrome.findTarget();
     await chrome.startSession(targetId);
