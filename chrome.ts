@@ -734,7 +734,10 @@ const fontContentTypes = new Map([
   ["woff", "application/font-woff"],
 ]);
 
-function contentType(resourceType: string, fileName: string): string {
+function contentType(
+  resourceType: string,
+  fileName: string,
+): string | undefined {
   const dotIndex = fileName.lastIndexOf(".");
   const extension = fileName.substr(dotIndex + 1);
   switch (resourceType) {
@@ -748,8 +751,6 @@ function contentType(resourceType: string, fileName: string): string {
       return imageContentTypes.get(extension) || "image/png";
     case "Font":
       return fontContentTypes.get(extension) || "application/font-woff";
-    default:
-      assert(false, "Unexpected resource type: " + resourceType);
   }
 }
 
