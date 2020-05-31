@@ -23,8 +23,9 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
- *
+ */
+
+/**
  * This file contains the code adapted from the folling urls:
  * * https://github.com/GoogleChromeLabs/carlo/blob/8f2cbfedf381818792017fe53651fe07f270bb96/lib/carlo.js
  * * https://github.com/GoogleChromeLabs/carlo/blob/8f2cbfedf381818792017fe53651fe07f270bb96/lib/http_request.js
@@ -84,8 +85,6 @@ interface Request {
   url: string;
   method: string;
   headers: object;
-  resourceType: string;
-  interceptionId: unknown;
   rawResponse: string;
 }
 
@@ -211,14 +210,16 @@ class ChromeImpl implements Chrome {
    * @see https://github.com/GoogleChromeLabs/carlo/blob/8f2cbfedf381818792017fe53651fe07f270bb96/lib/carlo.js
    */
   private async handleRequestIntercepted(params: {
+    interceptionId: string;
     request: Request;
-  }) {
-    const { request } = params;
+    resourceType: string;
+  }): Promise<void> {
+    const { request, interceptionId, resourceType } = params;
     const url = new URL(request.url);
     this.#logger.debug(`request url: ${url}`);
 
     if (url.hostname !== DUMMY_URL.hostname) {
-      this.deferRequestToBrowser(request);
+      await this.deferRequestToBrowser(interceptionId, request);
       return;
     }
 
@@ -233,7 +234,8 @@ class ChromeImpl implements Chrome {
       const pathname = urlpathname.substr(prefix.length);
       this.#logger.debug("pathname: " + pathname);
       if (entry.baseURL != null) {
-        this.deferRequestToBrowser(
+        await this.deferRequestToBrowser(
+          interceptionId,
           request,
           { url: String(new URL(pathname, entry.baseURL)) },
         );
@@ -247,12 +249,13 @@ class ChromeImpl implements Chrome {
         continue;
       }
 
-      const headers = { "content-type": contentType(request, fileName) };
+      this.#logger.debug("serveFile:", fileName);
+      const headers = { "content-type": contentType(resourceType, fileName) };
       const body = await Deno.readFile(fileName);
-      this.fullfillRequest({ request, headers, body });
+      await this.fullfillRequest({ interceptionId, request, headers, body });
       return;
     }
-    this.deferRequestToBrowser(request);
+    await this.deferRequestToBrowser(interceptionId, request);
   }
 
   /**
@@ -260,11 +263,13 @@ class ChromeImpl implements Chrome {
    * @see https://github.com/GoogleChromeLabs/carlo/blob/8f2cbfedf381818792017fe53651fe07f270bb96/lib/http_request.js
    */
   private deferRequestToBrowser(
+    interceptionId: string,
     base: Request,
     overrides: Partial<Request> = {},
-  ) {
+  ): Promise<object> {
     this.#logger.debug("deferRequestToBrowser:", overrides);
-    return this.resolveRequest({ ...base, ...overrides });
+    assert(interceptionId != null, "interceptionId must be required");
+    return this.resolveRequest(interceptionId, { ...base, ...overrides });
   }
 
   /**
@@ -272,17 +277,20 @@ class ChromeImpl implements Chrome {
    * @see https://github.com/GoogleChromeLabs/carlo/blob/8f2cbfedf381818792017fe53651fe07f270bb96/lib/http_request.js
    */
   private fullfillRequest({
+    interceptionId,
     request,
     headers,
     body,
     status = 200,
   }: {
+    interceptionId: string;
     request: Request;
     headers: HTTPHeaders;
     body: Uint8Array;
     status?: number;
-  }) {
+  }): Promise<object> {
     this.#logger.debug("fulfill", request.url);
+    assert(interceptionId != null, "interceptionId must be required");
     const responseHeaders = {} as HTTPHeaders;
     if (headers) {
       for (const header of Object.keys(headers)) {
@@ -307,8 +315,7 @@ class ChromeImpl implements Chrome {
       responseBuffer = concat(responseBuffer, body);
     }
 
-    return this.resolveRequest({
-      interceptionId: request.interceptionId,
+    return this.resolveRequest(interceptionId, {
       rawResponse: encodeToBase64(responseBuffer),
     });
   }
@@ -317,11 +324,15 @@ class ChromeImpl implements Chrome {
    * This methos is based on `Request#resolve_`
    * @see https://github.com/GoogleChromeLabs/carlo/blob/8f2cbfedf381818792017fe53651fe07f270bb96/lib/http_request.js
    */
-  private resolveRequest(request: Partial<Request>) {
-    this.#logger.debug("resolveRequest:", request.url);
+  private resolveRequest(interceptionId: string, request: Partial<Request>): Promise<object> {
+    this.#logger.debug("resolveRequest:", request);
+    assert(interceptionId != null, "interceptionId must be required");
     return this.sendMessageToTarget(
       "Network.continueInterceptedRequest",
-      request,
+      {
+        interceptionId,
+        ...request
+      },
     );
   }
 
@@ -552,7 +563,6 @@ class ChromeImpl implements Chrome {
         }
 
         if (res.error?.message) {
-          console.log(m);
           resc.reject(new EvaluateError(res.error!.message));
         } else if (res.result.exceptionDetails?.exception?.value != null) {
           resc.reject(
@@ -723,10 +733,10 @@ const fontContentTypes = new Map([
   ["woff", "application/font-woff"],
 ]);
 
-function contentType(request: Request, fileName: string): string {
+function contentType(resourceType: string, fileName: string): string {
   const dotIndex = fileName.lastIndexOf(".");
   const extension = fileName.substr(dotIndex + 1);
-  switch (request.resourceType) {
+  switch (resourceType) {
     case "Document":
       return "text/html";
     case "Script":
@@ -738,7 +748,7 @@ function contentType(request: Request, fileName: string): string {
     case "Font":
       return fontContentTypes.get(extension) || "application/font-woff";
     default:
-      assert(false, "Unexpected resource type: " + request.resourceType);
+      assert(false, "Unexpected resource type: " + resourceType);
   }
 }
 

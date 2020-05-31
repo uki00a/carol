@@ -1,5 +1,5 @@
 /**
- * Substantial parts adapted from https://github.com/zserge/lorca/blob/a3e43396a47ea152501d3453514c7f373cea530a/ui.go
+ * This file contains the code adapted from https://github.com/zserge/lorca/blob/a3e43396a47ea152501d3453514c7f373cea530a/ui.go
  * which is licensed as follows:
  *
  * MIT License
@@ -24,16 +24,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+/**
+ * This file contains the code adapted from https://github.com/GoogleChromeLabs/carlo/blob/8f2cbfedf381818792017fe53651fe07f270bb96/test/app.spec.js
+ * which is licensed as follows:
+ *
+ * Copyright 2018 Google Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the 'License');
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an 'AS IS' BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import {
   assertEquals,
   assertStrictEq,
   assertThrowsAsync,
   assert,
+  dirname,
+  join
 } from "./deps.ts";
 import { chromeDoesNotExist } from "./test_util.ts";
 import { launch } from "./mod.ts";
 import { EvaluateError } from "./chrome.ts";
-
+import { stringsReader } from "https://deno.land/std@0.53.0/io/util.ts";
 const { test } = Deno;
 const ignore = chromeDoesNotExist;
 
@@ -118,6 +139,64 @@ test({
     assert(called);
   },
 });
+
+test({
+  ignore,
+  name: "Application#serveFolder",
+  async fn() {
+    const app = await launch({
+      width: 480,
+      height: 320,
+      args: ["--headless"],
+    });
+    try {
+      const testdataFolder = join(dirname(new URL(import.meta.url).pathname), "testdata", "folder");
+      app.serveFolder(testdataFolder);
+      await app.load("index.html");
+      // Wait for page load
+      for (let i = 0; i < 10; i++) {
+        const url = await app.evaluate("window.location.href");
+        assertStrictEq(typeof url, "string");
+        if (url.startsWith("http://")) {
+          break;
+        }
+      }
+      const result = await app.evaluate("document.body.textContent");
+      assertStrictEq(result, "hello file");
+    } finally {
+      await app.exit();
+    }
+  }
+});
+
+test({
+  ignore,
+  name: "Application#serveFolder with prefix",
+  async fn() {
+    const app = await launch({
+      width: 480,
+      height: 320,
+      args: ["--headless"],
+    });
+    try {
+      const testdataFolder = join(dirname(new URL(import.meta.url).pathname), "testdata", "folder");
+      app.serveFolder(testdataFolder, "prefix");
+      await app.load("prefix/index.html");
+      // Wait for page load
+      for (let i = 0; i < 10; i++) {
+        const url = await app.evaluate("window.location.href");
+        assertStrictEq(typeof url, "string");
+        if (url.startsWith("http://")) {
+          break;
+        }
+      }
+      const result = await app.evaluate("document.body.textContent");
+      assertStrictEq(result, "hello file");
+    } finally {
+      await app.exit();
+    }
+  }
+})
 
 test({
   ignore,
