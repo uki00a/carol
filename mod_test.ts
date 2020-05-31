@@ -49,7 +49,7 @@ import {
   assertThrowsAsync,
   assert,
   dirname,
-  join
+  join,
 } from "./deps.ts";
 import { chromeDoesNotExist } from "./test_util.ts";
 import { launch } from "./mod.ts";
@@ -150,7 +150,11 @@ test({
       args: ["--headless"],
     });
     try {
-      const testdataFolder = join(dirname(new URL(import.meta.url).pathname), "testdata", "folder");
+      const testdataFolder = join(
+        dirname(new URL(import.meta.url).pathname),
+        "testdata",
+        "folder",
+      );
       app.serveFolder(testdataFolder);
       await app.load("index.html");
       // Wait for page load
@@ -166,7 +170,7 @@ test({
     } finally {
       await app.exit();
     }
-  }
+  },
 });
 
 test({
@@ -179,7 +183,11 @@ test({
       args: ["--headless"],
     });
     try {
-      const testdataFolder = join(dirname(new URL(import.meta.url).pathname), "testdata", "folder");
+      const testdataFolder = join(
+        dirname(new URL(import.meta.url).pathname),
+        "testdata",
+        "folder",
+      );
       app.serveFolder(testdataFolder, "prefix");
       await app.load("prefix/index.html");
       // Wait for page load
@@ -195,8 +203,8 @@ test({
     } finally {
       await app.exit();
     }
-  }
-})
+  },
+});
 
 test({
   ignore,

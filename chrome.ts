@@ -324,14 +324,17 @@ class ChromeImpl implements Chrome {
    * This methos is based on `Request#resolve_`
    * @see https://github.com/GoogleChromeLabs/carlo/blob/8f2cbfedf381818792017fe53651fe07f270bb96/lib/http_request.js
    */
-  private resolveRequest(interceptionId: string, request: Partial<Request>): Promise<object> {
+  private resolveRequest(
+    interceptionId: string,
+    request: Partial<Request>,
+  ): Promise<object> {
     this.#logger.debug("resolveRequest:", request);
     assert(interceptionId != null, "interceptionId must be required");
     return this.sendMessageToTarget(
       "Network.continueInterceptedRequest",
       {
         interceptionId,
-        ...request
+        ...request,
       },
     );
   }
