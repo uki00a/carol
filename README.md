@@ -16,7 +16,7 @@ It's based on excellent works of [lorca](https://github.com/zserge/lorca) and [c
 ## Examples
 
 ```typescript
-import { launch } from "https://deno.land/x/carol@v0.0.5/mod.ts";
+import { launch } from "https://deno.land/x/carol@v0.0.6/mod.ts";
 import { dirname, join } from "https://deno.land/std@0.54.0/path/mod.ts";
 
 const app = await launch({
