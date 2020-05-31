@@ -3,7 +3,6 @@ export { dirname, join } from "https://deno.land/std@0.54.0/path/mod.ts";
 export { BufReader } from "https://deno.land/std@0.54.0/io/bufio.ts";
 export { concat } from "https://deno.land/std@0.54.0/bytes/mod.ts";
 export { decode, encode } from "https://deno.land/std@0.54.0/encoding/utf8.ts";
-// FIXME
 export { encode as encodeToBase64 } from "https://deno.land/std@0.54.0/encoding/base64.ts";
 export {
   deferred,
