@@ -54,7 +54,7 @@ import {
 import { chromeDoesNotExist } from "./test_util.ts";
 import { launch } from "./mod.ts";
 import { EvaluateError } from "./chrome.ts";
-import { stringsReader } from "https://deno.land/std@0.53.0/io/util.ts";
+
 const { test } = Deno;
 const ignore = chromeDoesNotExist;
 
