@@ -8,7 +8,7 @@ const noop = () => {};
 const NullLogger = {
   log: noop,
   error: noop,
-  debug: noop
+  debug: noop,
 } as Logger;
 
 export function createLogger(env = Deno.env): Logger {
