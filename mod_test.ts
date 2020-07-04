@@ -45,7 +45,7 @@
  */
 import {
   assertEquals,
-  assertStrictEq,
+  assertStrictEquals,
   assertThrowsAsync,
   assert,
   dirname,
@@ -70,10 +70,10 @@ test({
 
     try {
       const res1 = await app.evaluate(`2+3`);
-      assertStrictEq(res1, 5);
+      assertStrictEquals(res1, 5);
 
       const res2 = await app.evaluate(`"foo" + "bar"`);
-      assertStrictEq(res2, "foobar");
+      assertStrictEquals(res2, "foobar");
 
       const res3 = await app.evaluate(`[1,2,3].map(n => n * 2)`);
       assertEquals(res3, [2, 4, 6]);
@@ -104,10 +104,10 @@ test({
         throw "hello";
       });
 
-      assertStrictEq(await app.evaluate(`add(2, 3)`), 5);
-      assertStrictEq(typeof await app.evaluate(`rand()`), "number");
-      assertStrictEq(await app.evaluate(`strlen('foo')`), 3);
-      assertStrictEq(await app.evaluate(`atoi('123')`), 123);
+      assertStrictEquals(await app.evaluate(`add(2, 3)`), 5);
+      assertStrictEquals(typeof await app.evaluate(`rand()`), "number");
+      assertStrictEquals(await app.evaluate(`strlen('foo')`), 3);
+      assertStrictEquals(await app.evaluate(`atoi('123')`), 123);
       await assertThrowsAsync(
         () => app.evaluate("shouldFail()"),
         EvaluateError,
@@ -160,13 +160,13 @@ test({
       // Wait for page load
       for (let i = 0; i < 10; i++) {
         const url = await app.evaluate("window.location.href");
-        assertStrictEq(typeof url, "string");
+        assertStrictEquals(typeof url, "string");
         if (url.startsWith("http://")) {
           break;
         }
       }
       const result = await app.evaluate("document.body.textContent");
-      assertStrictEq(result, "hello file");
+      assertStrictEquals(result, "hello file");
     } finally {
       await app.exit();
     }
@@ -193,13 +193,13 @@ test({
       // Wait for page load
       for (let i = 0; i < 10; i++) {
         const url = await app.evaluate("window.location.href");
-        assertStrictEq(typeof url, "string");
+        assertStrictEquals(typeof url, "string");
         if (url.startsWith("http://")) {
           break;
         }
       }
       const result = await app.evaluate("document.body.textContent");
-      assertStrictEq(result, "hello file");
+      assertStrictEquals(result, "hello file");
     } finally {
       await app.exit();
     }
