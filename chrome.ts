@@ -431,7 +431,7 @@ class ChromeImpl implements Chrome {
       this.#pending.delete(id);
       promise.reject(err);
     });
-    promise.catch(err => {
+    promise.catch((err) => {
       this.#logger.error(err);
     });
     return promise;
