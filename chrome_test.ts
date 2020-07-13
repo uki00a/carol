@@ -25,10 +25,9 @@
  * SOFTWARE.
  */
 
-import { assertEquals, assertStrictEquals, assertThrowsAsync } from "./deps.ts";
+import { assert, assertEquals, assertStrictEquals, assertThrowsAsync } from "./deps.ts";
 import { runChrome, EvaluateError } from "./chrome.ts";
 import { chromeDoesNotExist, chromeExecutable } from "./test_util.ts";
-import { assert } from "https://deno.land/std@0.51.0/testing/asserts.ts";
 const { test } = Deno;
 
 const ignore = chromeDoesNotExist;
