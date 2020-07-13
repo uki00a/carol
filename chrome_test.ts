@@ -25,7 +25,12 @@
  * SOFTWARE.
  */
 
-import { assert, assertEquals, assertStrictEquals, assertThrowsAsync } from "./deps.ts";
+import {
+  assert,
+  assertEquals,
+  assertStrictEquals,
+  assertThrowsAsync,
+} from "./deps.ts";
 import { runChrome, EvaluateError } from "./chrome.ts";
 import { chromeDoesNotExist, chromeExecutable } from "./test_util.ts";
 const { test } = Deno;
