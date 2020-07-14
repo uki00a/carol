@@ -384,13 +384,8 @@ class ChromeImpl implements Chrome {
     await this.evaluate(script);
   }
 
-  #isExited = false;
   async exit(): Promise<void> {
-    if (this.#isExited) {
-      return;
-    }
     this.#logger.debug("Now exiting...");
-    this.#isExited = true;
     this.#process.stderr!.close();
     this.#process.close();
     await this.#transport.close();
@@ -460,15 +455,13 @@ class ChromeImpl implements Chrome {
   }
 
   async readLoop(): Promise<void> {
-    while (!this.#isExited && !this.#transport.isClosed()) {
+    while (!this.#transport.isClosed()) {
       let m!: IncommingMessage;
       try {
         m = await this.#transport.receive();
       } catch (err) {
         if (
-          this.#isExited ||
           this.#transport.isClosed() ||
-          err instanceof Deno.errors.ConnectionReset ||
           err instanceof ConnectionAlreadyClosedError
         ) {
           break;
