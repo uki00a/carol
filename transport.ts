@@ -1,4 +1,5 @@
 import { connectWebSocket, isWebSocketCloseEvent } from "./deps.ts";
+import { ConnectionAlreadyClosedError } from "./errors.ts";
 
 export interface Command {
   id: number;
@@ -41,7 +42,9 @@ export async function createWSTransport(url: string): Promise<Transport> {
   async function receive(): Promise<IncommingMessage> {
     const result = await iter.next();
     if (result.done) {
-      throw new Error("WebSocket connection has been closed");
+      throw new ConnectionAlreadyClosedError(
+        "WebSocket connection has been closed",
+      );
     }
 
     const message = result.value;
@@ -49,7 +52,9 @@ export async function createWSTransport(url: string): Promise<Transport> {
       return JSON.parse(message);
     } else if (isWebSocketCloseEvent(message)) {
       await close();
-      throw new Error("WebSocket connection has been closed");
+      throw new ConnectionAlreadyClosedError(
+        "WebSocket connection has been closed",
+      );
     } else {
       throw new Error("Unexpected message received");
     }

@@ -48,6 +48,7 @@
 
 import { Transport, createWSTransport, IncommingMessage } from "./transport.ts";
 import { Logger, createLogger } from "./logger.ts";
+import { ConnectionAlreadyClosedError } from "./errors.ts";
 import {
   assert,
   BufReader,
@@ -456,7 +457,10 @@ class ChromeImpl implements Chrome {
         m = await this.#transport.receive();
       } catch (err) {
         this.#logger.error(err);
-        if (this.#transport.isClosed()) {
+        if (
+          this.#transport.isClosed() ||
+          err instanceof ConnectionAlreadyClosedError
+        ) {
           break;
         }
       }
