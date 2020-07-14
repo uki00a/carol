@@ -426,6 +426,7 @@ class ChromeImpl implements Chrome {
     };
     this.#transport.send(message).catch((err) => {
       if (err instanceof Deno.errors.ConnectionReset) {
+        pending.resolve({});
         this.#pending.delete(id);
         return;
       }
