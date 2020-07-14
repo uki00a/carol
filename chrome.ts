@@ -669,6 +669,7 @@ export async function createChrome({
   const chrome = new ChromeImpl(process, transport, logger);
   try {
     const targetId = await chrome.findTarget();
+    const pendings = [] as Promise<unknown>[];
     await chrome.startSession(targetId);
     chrome.readLoop();
     for (
@@ -686,7 +687,7 @@ export async function createChrome({
       ] as Array<[string, object | undefined]>
     ) {
       try {
-        chrome.sendMessageToTarget(method, params);
+        pendings.push(chrome.sendMessageToTarget(method, params));
       } catch (error) {
         chrome.exit();
         // chrome.process.wait();
@@ -703,6 +704,8 @@ export async function createChrome({
         throw err;
       }
     }
+
+    await Promise.all(pendings);
 
     return chrome;
   } catch (err) {
