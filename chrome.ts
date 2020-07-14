@@ -389,6 +389,7 @@ class ChromeImpl implements Chrome {
     if (this.#isExited) {
       return;
     }
+    this.#logger.debug("Now exiting...");
     this.#isExited = true;
     this.#process.stderr!.close();
     this.#process.close();
