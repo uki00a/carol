@@ -424,7 +424,13 @@ class ChromeImpl implements Chrome {
       method,
       ...args,
     };
-    this.#transport.send(message);
+    this.#transport.send(message).catch((err) => {
+      if (err instanceof Deno.errors.ConnectionReset) {
+        this.#pending.delete(id);
+        return;
+      }
+      this.#logger.error(err);
+    });
     const promise = deferred<object>();
     this.#pending.set(id, promise);
     return promise;
