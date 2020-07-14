@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      CAROL_DEBUG: 1
     steps:
     - uses: actions/checkout@master
     - name: Install Chrome
