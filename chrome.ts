@@ -468,6 +468,7 @@ class ChromeImpl implements Chrome {
         if (
           this.#isExited ||
           this.#transport.isClosed() ||
+          err instanceof Deno.errors.ConnectionReset ||
           err instanceof ConnectionAlreadyClosedError
         ) {
           break;
