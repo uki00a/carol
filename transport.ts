@@ -40,6 +40,12 @@ export async function createWSTransport(url: string): Promise<Transport> {
   }
 
   async function receive(): Promise<IncommingMessage> {
+    if (isClosed()) {
+      throw new ConnectionAlreadyClosedError(
+        "WebSocket connection has been closed",
+      );
+    }
+
     const result = await iter.next();
     if (result.done) {
       throw new ConnectionAlreadyClosedError(
