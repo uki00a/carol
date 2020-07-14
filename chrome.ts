@@ -459,13 +459,13 @@ class ChromeImpl implements Chrome {
       try {
         m = await this.#transport.receive();
       } catch (err) {
-        this.#logger.error(err);
         if (
           this.#transport.isClosed() ||
           err instanceof ConnectionAlreadyClosedError
         ) {
           break;
         }
+        this.#logger.error(err);
       }
 
       if (m.method == "Target.receivedMessageFromTarget") {
