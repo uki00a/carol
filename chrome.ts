@@ -432,6 +432,13 @@ class ChromeImpl implements Chrome {
       this.#pending.delete(id);
       // promise.reject(err);
     });
+    promise.catch((err) => {
+      this.#logger.error(err);
+      assert(
+        err instanceof ConnectionAlreadyClosedError,
+        "err must be an instance of ConnectionAlreadyClosedError",
+      );
+    });
     return promise;
   }
 
