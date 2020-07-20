@@ -120,7 +120,7 @@ class ChromeImpl implements Chrome {
       params: { targetId },
     });
 
-    while (true) {
+    while (!this.#transport.isClosed()) {
       const message = await this.#transport.receive();
       if (hasId(message, id)) {
         if (hasError(message)) {
@@ -140,7 +140,7 @@ class ChromeImpl implements Chrome {
       params: { discover: true },
     });
 
-    while (true) {
+    while (!this.#transport.isClosed()) {
       const message = await this.#transport.receive();
       if (
         isTargetCreated(message) && message.params.targetInfo.type === "page"
@@ -148,6 +148,7 @@ class ChromeImpl implements Chrome {
         return message.params.targetInfo.targetId;
       }
     }
+    throw new Error("connection already closed");
   }
 
   evaluate(expr: string): Promise<any> {
@@ -424,14 +425,7 @@ class ChromeImpl implements Chrome {
       method,
       ...args,
     };
-    this.#transport.send(message).catch((err) => {
-      if (err instanceof Deno.errors.ConnectionReset) {
-        pending.resolve({});
-        this.#pending.delete(id);
-        return;
-      }
-      this.#logger.error(err);
-    });
+    this.#transport.send(message);
     const promise = deferred<object>();
     this.#pending.set(id, promise);
     return promise;
