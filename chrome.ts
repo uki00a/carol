@@ -541,7 +541,7 @@ class ChromeImpl implements Chrome {
                 error ? JSON.stringify(error) : '""',
               );
 
-              this.sendMessageToTarget("Runtime.evaluate", {
+              await this.sendMessageToTarget("Runtime.evaluate", {
                 "expression": expr,
                 "contextId": contextId,
               });
