@@ -64,6 +64,7 @@ import {
 
 export interface Chrome {
   // TODO add support for passing a JS function
+  // deno-lint-ignore no-explicit-any
   evaluate(expr: string): Promise<any>;
   bind(name: string, binding: Binding): Promise<void>;
   load(url: string): Promise<void>;
@@ -73,8 +74,8 @@ export interface Chrome {
   onExit(): Promise<void>;
 }
 
-type Binding = (args: any[]) => any;
-type HTTPHeaders = { [header: string]: any };
+type Binding = (args: unknown[]) => unknown;
+type HTTPHeaders = { [header: string]: unknown };
 
 interface Request {
   url: string;
@@ -92,7 +93,7 @@ class ChromeImpl implements Chrome {
   #transport: Transport;
   #logger: Logger;
 
-  #pending: Map<number, Deferred<any>> = new Map();
+  #pending: Map<number, Deferred<object>> = new Map();
   #bindings: Map<string, Binding> = new Map();
   #exitPromise: Deferred<void> = deferred();
   #www: Array<{ prefix: string; folder?: string; baseURL?: URL }> = [];
@@ -126,9 +127,9 @@ class ChromeImpl implements Chrome {
         if (hasError(message)) {
           throw new Error(`Target error: ${message.error}`);
         }
-        // FIXME
-        if ((message as any).result && (message as any).result.sessionId) {
-          this.#session = (message as any).result.sessionId;
+        // FIXME This is not ideal.
+        if (has(message, "result") && has(message.result, "sessionId")) {
+          this.#session = message.result.sessionId as string;
           return;
         }
       }
@@ -150,7 +151,7 @@ class ChromeImpl implements Chrome {
     }
   }
 
-  evaluate(expr: string): Promise<any> {
+  evaluate(expr: string) {
     return this.sendMessageToTarget("Runtime.evaluate", {
       "expression": expr,
       "awaitPromise": true,
@@ -171,7 +172,7 @@ class ChromeImpl implements Chrome {
    * @param {string=} folder Folder with the web content.
    * @param {string=} prefix Only serve folder for requests with given prefix.
    */
-  serveFolder(folder: string, prefix: string = ""): void {
+  serveFolder(folder: string, prefix = ""): void {
     this.#www.push({ folder, prefix: wrapPrefix(prefix) });
   }
 
@@ -438,7 +439,7 @@ class ChromeImpl implements Chrome {
       "Browser.getWindowForTarget",
       { "targetId": target },
     );
-    return msg as any; // FIXME
+    return msg as { windowId: number; bounds: object }; // FIXME
   }
 
   setWindow(windowId: number): void {
@@ -548,7 +549,13 @@ class ChromeImpl implements Chrome {
           }
           continue;
         } else if (res.method === "Network.requestIntercepted") {
-          this.handleRequestIntercepted(res.params as any); // FIXME
+          this.handleRequestIntercepted(
+            res.params as {
+              interceptionId: string;
+              request: Request;
+              resourceType: string;
+            },
+          ); // FIXME
           continue;
         }
 
@@ -593,12 +600,20 @@ class ChromeImpl implements Chrome {
   }
 }
 
-function hasId(x: object, id: number): x is { id: number } {
-  return x && (x as any).id === id;
+function has<Key extends string>(
+  object: unknown,
+  key: Key,
+): object is { [key in Key]: unknown } {
+  // deno-lint-ignore no-explicit-any
+  return object && (object as any)[key];
 }
 
-function hasError(x: object): x is { error: any } {
-  return x && (x as any).error != null;
+function hasId(x: object, id: number): x is { id: number } {
+  return has(x, "id") && x.id === id;
+}
+
+function hasError(x: object): x is { error: unknown } {
+  return has(x, "error");
 }
 
 function isTargetCreated(x: object): x is {
@@ -610,7 +625,7 @@ function isTargetCreated(x: object): x is {
     };
   };
 } {
-  return x && (x as any)["method"] === "Target.targetCreated";
+  return has(x, "method") && x["method"] === "Target.targetCreated";
 }
 
 export interface RunChromeOptions {

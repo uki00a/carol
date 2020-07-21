@@ -86,11 +86,11 @@ testChrome("Chrome#load", async (chrome) => {
 });
 
 testChrome("Chrome#bind", async (chrome) => {
-  await chrome.bind("add", (args: any[]): number => {
+  await chrome.bind("add", (args: unknown[]): number => {
     assertStrictEquals(args.length, 2, "2 arguments expected");
     assertStrictEquals(typeof args[0], "number");
     assertStrictEquals(typeof args[1], "number");
-    const [a, b] = args;
+    const [a, b] = args as [number, number];
     return a + b;
   });
   const res = await chrome.evaluate(`window.add(2, 3)`);

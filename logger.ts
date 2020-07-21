@@ -1,7 +1,7 @@
 export interface Logger {
-  log(message: any, ...args: any[]): void;
-  error(message: any, ...args: any[]): void;
-  debug(message: any, ...args: any[]): void;
+  log(message: unknown, ...args: unknown[]): void;
+  error(message: unknown, ...args: unknown[]): void;
+  debug(message: unknown, ...args: unknown[]): void;
 }
 
 const noop = () => {};
