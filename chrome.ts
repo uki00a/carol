@@ -651,7 +651,7 @@ export async function createChrome({
   try {
     const targetId = await chrome.findTarget();
     await chrome.startSession(targetId);
-    chrome.readLoop(); // TODO Probably needs error handling...
+    chrome.readLoop(); // TODO(#17) Probably needs error handling...
     for (
       const [method, params] of [
         ["Page.enable"],
