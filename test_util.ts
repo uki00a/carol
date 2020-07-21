@@ -28,11 +28,13 @@ export function testChrome(
       });
       try {
         await fn(chrome);
-      } catch (err) {
-        // TODO(#17) Some tests fail frequently in CI (needs more investigation)
-        assert(err instanceof Deno.errors.ConnectionReset);
       } finally {
-        await chrome.exit();
+        try {
+          await chrome.exit();
+        } catch (err) {
+          // TODO(#17) Some tests fail frequently in CI (needs more investigation)
+          assert(err instanceof Deno.errors.ConnectionReset);
+        }
       }
     },
   });
@@ -50,11 +52,13 @@ export function testApp(
       const app = await launch(options);
       try {
         await fn(app);
-      } catch (err) {
-        // TODO(#17) Some tests fail frequently in CI (needs more investigation)
-        assert(err instanceof Deno.errors.ConnectionReset);
       } finally {
-        await app.exit();
+        try {
+          await app.exit();
+        } catch (err) {
+          // TODO(#17) Some tests fail frequently in CI (needs more investigation)
+          assert(err instanceof Deno.errors.ConnectionReset);
+        }
       }
     },
   });
