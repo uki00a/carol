@@ -31,116 +31,78 @@ import {
   assertStrictEquals,
   assertThrowsAsync,
 } from "./deps.ts";
-import { runChrome, EvaluateError } from "./chrome.ts";
-import { chromeDoesNotExist, chromeExecutable } from "./test_util.ts";
+import { EvaluateError } from "./chrome.ts";
+import { testChrome } from "./test_util.ts";
 const { test } = Deno;
 
-const ignore = chromeDoesNotExist;
-
-test({
-  ignore,
-  name: "Chrome#evaluate",
-  async fn() {
-    const chrome = await runChrome({
-      executable: chromeExecutable,
-      args: ["--user-data-dir=/tmp", "--headless", "--remote-debugging-port=0"],
-    });
+testChrome("Chrome#evaluate", async (chrome) => {
+  for (
+    const test of [
+      { expr: ``, result: undefined },
+      { expr: `42`, result: 42 },
+      { expr: `2+3`, result: 5 },
+      { expr: `(() => ({x: 5, y: 7}))()`, result: { "x": 5, "y": 7 } },
+      { expr: `(() => ([1,'foo',false]))()`, result: [1, "foo", false] },
+      { expr: `((a, b) => a*b)(3, 7)`, result: 21 },
+      { expr: `Promise.resolve(42)`, result: 42 },
+      { expr: `Promise.reject('foo')`, error: "foo" },
+      { expr: `throw "bar"`, error: "bar" },
+      { expr: `2+`, error: `SyntaxError: Unexpected end of input` },
+    ]
+  ) {
     try {
-      for (
-        const test of [
-          { expr: ``, result: undefined },
-          { expr: `42`, result: 42 },
-          { expr: `2+3`, result: 5 },
-          { expr: `(() => ({x: 5, y: 7}))()`, result: { "x": 5, "y": 7 } },
-          { expr: `(() => ([1,'foo',false]))()`, result: [1, "foo", false] },
-          { expr: `((a, b) => a*b)(3, 7)`, result: 21 },
-          { expr: `Promise.resolve(42)`, result: 42 },
-          { expr: `Promise.reject('foo')`, error: "foo" },
-          { expr: `throw "bar"`, error: "bar" },
-          { expr: `2+`, error: `SyntaxError: Unexpected end of input` },
-        ]
-      ) {
-        try {
-          const result = await chrome.evaluate(test.expr);
-          assertEquals(result, test.result);
-        } catch (error) {
-          if (test.error == null) {
-            throw error;
-          }
-          assertEquals(test.error, error.message);
-          assert(
-            error instanceof EvaluateError,
-            "The error should be instanceof EvaluateError",
-          );
-        }
+      const result = await chrome.evaluate(test.expr);
+      assertEquals(result, test.result);
+    } catch (error) {
+      if (test.error == null) {
+        throw error;
       }
-    } finally {
-      await chrome.exit();
+      assertEquals(test.error, error.message);
+      assert(
+        error instanceof EvaluateError,
+        "The error should be instanceof EvaluateError",
+      );
     }
-  },
+  }
 });
 
-test({
-  ignore,
-  name: "Chrome#load",
-  async fn() {
-    const chrome = await runChrome({
-      executable: chromeExecutable,
-      args: ["--user-data-dir=/tmp", "--headless", "--remote-debugging-port=0"],
-    });
-    try {
-      await chrome.load("data:text/html,<html><body>Hello</body></html>");
+testChrome("Chrome#load", async (chrome) => {
+  await chrome.load("data:text/html,<html><body>Hello</body></html>");
 
-      for (let i = 0; i < 10; i++) {
-        const url = await chrome.evaluate(`window.location.href`);
-        assertStrictEquals(typeof url, "string", "url must be string");
-        if (url.startsWith(`"data:text/html,`)) {
-          break;
-        }
-      }
-
-      const res = await chrome.evaluate(
-        `document.body ? document.body.innerText :
-        new Promise(res => window.onload = () => res(document.body.innerText))`,
-      );
-
-      assertStrictEquals(res, "Hello");
-    } finally {
-      await chrome.exit();
+  for (let i = 0; i < 10; i++) {
+    const url = await chrome.evaluate(`window.location.href`);
+    assertStrictEquals(typeof url, "string", "url must be string");
+    if (url.startsWith(`"data:text/html,`)) {
+      break;
     }
-  },
+  }
+
+  const res = await chrome.evaluate(
+    `document.body ? document.body.innerText :
+    new Promise(res => window.onload = () => res(document.body.innerText))`,
+  );
+
+  assertStrictEquals(res, "Hello");
 });
 
-test({
-  ignore,
-  name: "Chrome#bind",
-  async fn() {
-    const chrome = await runChrome({
-      executable: chromeExecutable,
-      args: ["--user-data-dir=/tmp", "--headless", "--remote-debugging-port=0"],
-    });
-    try {
-      await chrome.bind("add", (args: any[]): number => {
-        assertStrictEquals(args.length, 2, "2 arguments expected");
-        assertStrictEquals(typeof args[0], "number");
-        assertStrictEquals(typeof args[1], "number");
-        const [a, b] = args;
-        return a + b;
-      });
-      const res = await chrome.evaluate(`window.add(2, 3)`);
-      assertStrictEquals(res, 5);
+testChrome("Chrome#bind", async (chrome) => {
+  await chrome.bind("add", (args: any[]): number => {
+    assertStrictEquals(args.length, 2, "2 arguments expected");
+    assertStrictEquals(typeof args[0], "number");
+    assertStrictEquals(typeof args[1], "number");
+    const [a, b] = args;
+    return a + b;
+  });
+  const res = await chrome.evaluate(`window.add(2, 3)`);
+  assertStrictEquals(res, 5);
 
-      await assertThrowsAsync(
-        () => chrome.evaluate(`window.add("foo", "bar")`),
-        EvaluateError,
-      );
+  await assertThrowsAsync(
+    () => chrome.evaluate(`window.add("foo", "bar")`),
+    EvaluateError,
+  );
 
-      await assertThrowsAsync(
-        () => chrome.evaluate(`window.add(1, 2, 3)`),
-        EvaluateError,
-      );
-    } finally {
-      await chrome.exit();
-    }
-  },
+  await assertThrowsAsync(
+    () => chrome.evaluate(`window.add(1, 2, 3)`),
+    EvaluateError,
+  );
 });
