@@ -51,172 +51,113 @@ import {
   dirname,
   join,
 } from "./deps.ts";
-import { chromeDoesNotExist } from "./test_util.ts";
+import { test, testApp } from "./test_util.ts";
 import { launch } from "./mod.ts";
 import { EvaluateError } from "./chrome.ts";
 
-const { test } = Deno;
-const ignore = chromeDoesNotExist;
+const options = {
+  width: 480,
+  height: 320,
+  args: ["--headless"],
+};
 
-test({
-  ignore,
-  name: "Application#evaluate",
-  async fn() {
-    const app = await launch({
-      width: 480,
-      height: 320,
-      args: ["--headless"],
-    });
+testApp("Application#evaluate", async (app) => {
+  const res1 = await app.evaluate(`2+3`);
+  assertStrictEquals(res1, 5);
 
-    try {
-      const res1 = await app.evaluate(`2+3`);
-      assertStrictEquals(res1, 5);
+  const res2 = await app.evaluate(`"foo" + "bar"`);
+  assertStrictEquals(res2, "foobar");
 
-      const res2 = await app.evaluate(`"foo" + "bar"`);
-      assertStrictEquals(res2, "foobar");
+  const res3 = await app.evaluate(`[1,2,3].map(n => n * 2)`);
+  assertEquals(res3, [2, 4, 6]);
 
-      const res3 = await app.evaluate(`[1,2,3].map(n => n * 2)`);
-      assertEquals(res3, [2, 4, 6]);
+  await assertThrowsAsync(() => app.evaluate(`throw fail`), EvaluateError);
+}, options);
 
-      await assertThrowsAsync(() => app.evaluate(`throw fail`), EvaluateError);
-    } finally {
-      await app.exit();
+testApp("Application#exposeFunction", async (app) => {
+  await app.exposeFunction("add", (a: number, b: number) => a + b);
+  await app.exposeFunction("rand", () => Math.random());
+  await app.exposeFunction("strlen", (s: string) => s.length);
+  await app.exposeFunction("atoi", (s: string) => parseInt(s));
+  await app.exposeFunction("shouldFail", () => {
+    throw "hello";
+  });
+
+  assertStrictEquals(await app.evaluate(`add(2, 3)`), 5);
+  assertStrictEquals(typeof await app.evaluate(`rand()`), "number");
+  assertStrictEquals(await app.evaluate(`strlen('foo')`), 3);
+  assertStrictEquals(await app.evaluate(`atoi('123')`), 123);
+  await assertThrowsAsync(
+    () => app.evaluate("shouldFail()"),
+    EvaluateError,
+    "hello",
+  );
+}, options);
+
+test("Application#onExit", async () => {
+  const app = await launch({
+    width: 480,
+    height: 320,
+    args: ["--headless"],
+  });
+
+  let called = false;
+  app.onExit().then(() => {
+    called = true;
+  });
+
+  await app.exit();
+
+  assert(called);
+});
+
+testApp("Application#serveFolder", async (app) => {
+  const testdataFolder = join(
+    dirname(new URL(import.meta.url).pathname),
+    "testdata",
+    "folder",
+  );
+  app.serveFolder(testdataFolder);
+  await app.load("index.html");
+  // Wait for page load
+  for (let i = 0; i < 10; i++) {
+    const url = await app.evaluate("window.location.href");
+    assertStrictEquals(typeof url, "string");
+    if (url.startsWith("http://")) {
+      break;
     }
-  },
-});
+  }
+  const result = await app.evaluate("document.body.textContent");
+  assertStrictEquals(result, "hello file");
+}, options);
 
-test({
-  ignore,
-  name: "Application#exposeFunction",
-  async fn() {
-    const app = await launch({
-      width: 480,
-      height: 320,
-      args: ["--headless"],
-    });
-
-    try {
-      await app.exposeFunction("add", (a: number, b: number) => a + b);
-      await app.exposeFunction("rand", () => Math.random());
-      await app.exposeFunction("strlen", (s: string) => s.length);
-      await app.exposeFunction("atoi", (s: string) => parseInt(s));
-      await app.exposeFunction("shouldFail", () => {
-        throw "hello";
-      });
-
-      assertStrictEquals(await app.evaluate(`add(2, 3)`), 5);
-      assertStrictEquals(typeof await app.evaluate(`rand()`), "number");
-      assertStrictEquals(await app.evaluate(`strlen('foo')`), 3);
-      assertStrictEquals(await app.evaluate(`atoi('123')`), 123);
-      await assertThrowsAsync(
-        () => app.evaluate("shouldFail()"),
-        EvaluateError,
-        "hello",
-      );
-    } finally {
-      await app.exit();
+testApp("Application#serveFolder with prefix", async (app) => {
+  const testdataFolder = join(
+    dirname(new URL(import.meta.url).pathname),
+    "testdata",
+    "folder",
+  );
+  app.serveFolder(testdataFolder, "prefix");
+  await app.load("prefix/index.html");
+  // Wait for page load
+  for (let i = 0; i < 10; i++) {
+    const url = await app.evaluate("window.location.href");
+    assertStrictEquals(typeof url, "string");
+    if (url.startsWith("http://")) {
+      break;
     }
-  },
-});
+  }
+  const result = await app.evaluate("document.body.textContent");
+  assertStrictEquals(result, "hello file");
+}, options);
 
-test({
-  ignore,
-  name: "Application#onExit",
-  async fn() {
-    const app = await launch({
+test("custom executablePath", async () => {
+  await assertThrowsAsync(async () => {
+    await launch({
+      executablePath: "/",
       width: 480,
       height: 320,
       args: ["--headless"],
     });
-
-    let called = false;
-    app.onExit().then(() => {
-      called = true;
-    });
-
-    await app.exit();
-
-    assert(called);
-  },
-});
-
-test({
-  ignore,
-  name: "Application#serveFolder",
-  async fn() {
-    const app = await launch({
-      width: 480,
-      height: 320,
-      args: ["--headless"],
-    });
-    try {
-      const testdataFolder = join(
-        dirname(new URL(import.meta.url).pathname),
-        "testdata",
-        "folder",
-      );
-      app.serveFolder(testdataFolder);
-      await app.load("index.html");
-      // Wait for page load
-      for (let i = 0; i < 10; i++) {
-        const url = await app.evaluate("window.location.href");
-        assertStrictEquals(typeof url, "string");
-        if (url.startsWith("http://")) {
-          break;
-        }
-      }
-      const result = await app.evaluate("document.body.textContent");
-      assertStrictEquals(result, "hello file");
-    } finally {
-      await app.exit();
-    }
-  },
-});
-
-test({
-  ignore,
-  name: "Application#serveFolder with prefix",
-  async fn() {
-    const app = await launch({
-      width: 480,
-      height: 320,
-      args: ["--headless"],
-    });
-    try {
-      const testdataFolder = join(
-        dirname(new URL(import.meta.url).pathname),
-        "testdata",
-        "folder",
-      );
-      app.serveFolder(testdataFolder, "prefix");
-      await app.load("prefix/index.html");
-      // Wait for page load
-      for (let i = 0; i < 10; i++) {
-        const url = await app.evaluate("window.location.href");
-        assertStrictEquals(typeof url, "string");
-        if (url.startsWith("http://")) {
-          break;
-        }
-      }
-      const result = await app.evaluate("document.body.textContent");
-      assertStrictEquals(result, "hello file");
-    } finally {
-      await app.exit();
-    }
-  },
-});
-
-test({
-  ignore,
-  name: "custom executablePath",
-  async fn() {
-    await assertThrowsAsync(async () => {
-      await launch({
-        executablePath: "/",
-        width: 480,
-        height: 320,
-        args: ["--headless"],
-      });
-    }, Deno.errors.PermissionDenied); // TODO Is this correct? (PermissionDenied)
-  },
+  }, Deno.errors.PermissionDenied); // TODO Is this correct? (PermissionDenied)
 });
