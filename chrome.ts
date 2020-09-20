@@ -80,7 +80,7 @@ type HTTPHeaders = { [header: string]: unknown };
 interface Request {
   url: string;
   method: string;
-  headers: object;
+  headers: Record<string, unknown>;
   rawResponse: string;
 }
 
@@ -93,7 +93,7 @@ class ChromeImpl implements Chrome {
   #transport: Transport;
   #logger: Logger;
 
-  #pending: Map<number, Deferred<object>> = new Map();
+  #pending: Map<number, Deferred<Record<string, unknown>>> = new Map();
   #bindings: Map<string, Binding> = new Map();
   #exitPromise: Deferred<void> = deferred();
   #www: Array<{ prefix: string; folder?: string; baseURL?: URL }> = [];
@@ -262,7 +262,7 @@ class ChromeImpl implements Chrome {
     interceptionId: string,
     base: Request,
     overrides: Partial<Request> = {},
-  ): Promise<object> {
+  ): Promise<Record<string, unknown>> {
     this.#logger.debug("deferRequestToBrowser:", overrides);
     assert(interceptionId != null, "interceptionId must be required");
     return this.resolveRequest(interceptionId, { ...base, ...overrides });
@@ -284,7 +284,7 @@ class ChromeImpl implements Chrome {
     headers: HTTPHeaders;
     body: Uint8Array;
     status?: number;
-  }): Promise<object> {
+  }): Promise<Record<string, unknown>> {
     this.#logger.debug("fulfill", request.url);
     assert(interceptionId != null, "interceptionId must be required");
     const responseHeaders = {} as HTTPHeaders;
@@ -323,7 +323,7 @@ class ChromeImpl implements Chrome {
   private resolveRequest(
     interceptionId: string,
     request: Partial<Request>,
-  ): Promise<object> {
+  ): Promise<Record<string, unknown>> {
     this.#logger.debug("resolveRequest:", request);
     assert(interceptionId != null, "interceptionId must be required");
     return this.sendMessageToTarget(
@@ -400,7 +400,7 @@ class ChromeImpl implements Chrome {
     return ++this.#lastId;
   }
 
-  sendMessageToTarget(method: string, args: object = {}) {
+  sendMessageToTarget(method: string, args: Record<string, unknown> = {}) {
     assert(this.#session, "session must be created");
     const id = this.nextId();
     return this.sendMessage(id, "Target.sendMessageToTarget", {
@@ -418,28 +418,28 @@ class ChromeImpl implements Chrome {
   private sendMessage(
     id: number,
     method: string,
-    args: object = {},
-  ): Promise<object> {
+    args: Record<string, unknown> = {},
+  ): Promise<Record<string, unknown>> {
     const message = {
       id,
       method,
       ...args,
     };
     this.#transport.send(message);
-    const promise = deferred<object>();
+    const promise = deferred<Record<string, unknown>>();
     this.#pending.set(id, promise);
     return promise;
   }
 
   async getWindowForTarget(target: string): Promise<{
     windowId: number;
-    bounds: object;
+    bounds: Record<string, unknown>;
   }> {
     const msg = await this.sendMessageToTarget(
       "Browser.getWindowForTarget",
       { "targetId": target },
     );
-    return msg as { windowId: number; bounds: object }; // FIXME
+    return msg as { windowId: number; bounds: Record<string, unknown> }; // FIXME
   }
 
   setWindow(windowId: number): void {
@@ -467,14 +467,14 @@ class ChromeImpl implements Chrome {
         type TargetReceivedMessageFromTargetMessage = {
           id: number;
           method: string;
-          params: object;
+          params: Record<string, unknown>;
           error?: { message?: string };
           result: {
             result?: {
               description: string;
               type: string;
               subtype: string;
-              value: object;
+              value: Record<string, unknown>;
             };
             exceptionDetails?: {
               exception?: { value?: string };
@@ -506,7 +506,7 @@ class ChromeImpl implements Chrome {
           type RuntimeBindingCalledParamsPayload = {
             name: string;
             seq: number;
-            args: object[];
+            args: Record<string, unknown>[];
           };
           const { payload: payloadString, name: bindingName, id: contextId } =
             (res.params as RuntimeBindingCalledParams);
@@ -608,15 +608,15 @@ function has<Key extends string>(
   return object && (object as any)[key];
 }
 
-function hasId(x: object, id: number): x is { id: number } {
+function hasId(x: Record<string, unknown>, id: number): x is { id: number } {
   return has(x, "id") && x.id === id;
 }
 
-function hasError(x: object): x is { error: unknown } {
+function hasError(x: Record<string, unknown>): x is { error: unknown } {
   return has(x, "error");
 }
 
-function isTargetCreated(x: object): x is {
+function isTargetCreated(x: Record<string, unknown>): x is {
   method: "Target.targetCreated";
   params: {
     targetInfo: {
@@ -679,7 +679,7 @@ export async function createChrome({
         ["Security.enable"],
         ["Performance.enable"],
         ["Log.enable"],
-      ] as Array<[string, object | undefined]>
+      ] as Array<[string, Record<string, unknown> | undefined]>
     ) {
       try {
         chrome.sendMessageToTarget(method, params);

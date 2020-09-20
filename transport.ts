@@ -3,14 +3,14 @@ import { connectWebSocket, isWebSocketCloseEvent } from "./deps.ts";
 export interface Command {
   id: number;
   method: string;
-  params?: object;
+  params?: Record<string, unknown>;
 }
 
-export interface IncommingMessage {
-  id: number;
-  method: string;
-  error?: string;
-  params: object;
+export interface IncommingMessage extends Record<string, unknown> {
+  readonly id: number;
+  readonly method: string;
+  readonly error?: string;
+  readonly params: Record<string, unknown>;
 }
 
 export interface Transport {
