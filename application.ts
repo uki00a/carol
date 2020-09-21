@@ -1,4 +1,4 @@
-import { Chrome } from "./chrome.ts";
+import type { Chrome } from "./chrome.ts";
 
 export interface Application {
   load(url: string): Promise<void>;

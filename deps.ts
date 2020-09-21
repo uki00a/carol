@@ -6,8 +6,8 @@ export { decode, encode } from "https://deno.land/std@v0.70.0/encoding/utf8.ts";
 export { encode as encodeToBase64 } from "https://deno.land/std@v0.70.0/encoding/base64.ts";
 export {
   deferred,
-  Deferred,
 } from "https://deno.land/std@v0.70.0/async/deferred.ts";
+export type { Deferred } from "https://deno.land/std@v0.70.0/async/deferred.ts";
 export { sprintf } from "https://deno.land/std@v0.70.0/fmt/printf.ts";
 export {
   assert,
