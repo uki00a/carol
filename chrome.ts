@@ -46,15 +46,15 @@
  * limitations under the License.
  */
 
-import { Transport, createWSTransport, IncommingMessage } from "./transport.ts";
-import { Logger, createLogger } from "./logger.ts";
+import { createWSTransport, IncommingMessage, Transport } from "./transport.ts";
+import { createLogger, Logger } from "./logger.ts";
 import {
   assert,
   BufReader,
   concat,
   decode,
-  deferred,
   Deferred,
+  deferred,
   encode,
   encodeToBase64,
   exists,
@@ -238,7 +238,7 @@ class ChromeImpl implements Chrome {
         return;
       }
 
-      const folder = entry.folder?.split('/').slice(1).join();
+      const folder = entry.folder?.split("/").slice(1).join();
       assert(folder != null);
       const fileName = join(folder, pathname);
       if (!await exists(fileName)) {

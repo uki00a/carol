@@ -44,10 +44,10 @@
  * limitations under the License.
  */
 import {
+  assert,
   assertEquals,
   assertStrictEquals,
   assertThrowsAsync,
-  assert,
   dirname,
   join,
 } from "./deps.ts";
