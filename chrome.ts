@@ -238,7 +238,7 @@ class ChromeImpl implements Chrome {
         return;
       }
 
-      const folder;
+      const folder = entry.folder;
       assert(folder != null);
       const fileName = join(folder, pathname);
       if (!await exists(fileName)) {
