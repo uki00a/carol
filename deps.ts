@@ -15,6 +15,7 @@ export {
   assert,
   assertEquals,
   assertStrictEquals,
+  assertStringIncludes,
   assertThrowsAsync,
   fail,
 } from "https://deno.land/std@0.82.0/testing/asserts.ts";

@@ -29,6 +29,8 @@ import { locateChrome } from "./locate.ts";
 import { runChrome } from "./chrome.ts";
 import { Application, createApplication } from "./application.ts";
 
+export type { Application };
+
 export interface LaunchOptions {
   title?: string;
   width?: number;

@@ -47,13 +47,26 @@ import {
   assert,
   assertEquals,
   assertStrictEquals,
+  assertStringIncludes,
   assertThrowsAsync,
   dirname,
   join,
 } from "./deps.ts";
-import { test, testApp } from "./test_util.ts";
+import { startFileServer, test, testApp } from "./test_util.ts";
 import { launch } from "./mod.ts";
+import type { Application } from "./mod.ts";
 import { EvaluateError } from "./chrome.ts";
+
+async function waitForPageLoad(app: Application): Promise<void> {
+  // Wait for page load
+  for (let i = 0; i < 10; i++) {
+    const url = await app.evaluate("window.location.href");
+    assertStrictEquals(typeof url, "string");
+    if (url.startsWith("http://")) {
+      break;
+    }
+  }
+}
 
 const options = {
   width: 480,
@@ -139,16 +152,37 @@ testApp("Application#serveFolder with prefix", async (app) => {
   );
   app.serveFolder(testdataFolder, "prefix");
   await app.load("prefix/index.html");
-  // Wait for page load
-  for (let i = 0; i < 10; i++) {
-    const url = await app.evaluate("window.location.href");
-    assertStrictEquals(typeof url, "string");
-    if (url.startsWith("http://")) {
-      break;
-    }
-  }
+  await waitForPageLoad(app);
   const result = await app.evaluate("document.body.textContent");
   assertStrictEquals(result, "hello file");
+}, options);
+
+testApp("Application#serveOrigin works", async (app) => {
+  const port = 3000;
+  const server = startFileServer(port);
+  try {
+    app.serveOrigin(`http://127.0.0.1:${port}`);
+    await app.load("index.html");
+    await waitForPageLoad(app);
+    const result = await app.evaluate("document.body.textContent");
+    assertStringIncludes(result, "hello http");
+  } finally {
+    await server.close();
+  }
+}, options);
+
+testApp("Application#serveOrigin: prefix is respected", async (app) => {
+  const port = 3000;
+  const server = startFileServer(port);
+  try {
+    app.serveOrigin(`http://127.0.0.1:${port}`, "prefix");
+    await app.load("prefix/index.html");
+    await waitForPageLoad(app);
+    const result = await app.evaluate("document.body.textContent");
+    assertStringIncludes(result, "hello http");
+  } finally {
+    await server.close();
+  }
 }, options);
 
 test("custom executablePath", async () => {
