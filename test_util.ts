@@ -2,7 +2,7 @@ import { Chrome, runChrome } from "./chrome.ts";
 import { assert } from "./deps.ts";
 import { locateChrome } from "./locate.ts";
 import type { Application } from "./application.ts";
-import { LaunchOptions, launch } from "./mod.ts";
+import { launch, LaunchOptions } from "./mod.ts";
 
 const chromeExecutable = await locateChrome();
 const chromeDoesNotExist = !chromeExecutable;

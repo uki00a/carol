@@ -46,15 +46,15 @@
  * limitations under the License.
  */
 
-import { Transport, createWSTransport, IncommingMessage } from "./transport.ts";
-import { Logger, createLogger } from "./logger.ts";
+import { createWSTransport, IncommingMessage, Transport } from "./transport.ts";
+import { createLogger, Logger } from "./logger.ts";
 import {
   assert,
   BufReader,
   concat,
   decode,
-  deferred,
   Deferred,
+  deferred,
   encode,
   encodeToBase64,
   exists,
