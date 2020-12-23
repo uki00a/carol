@@ -517,8 +517,8 @@ class ChromeImpl implements Chrome {
           const binding = this.#bindings.get(bindingName);
           if (binding) {
             (async () => {
-              let result: string = "";
-              let error: string = "";
+              let result = "";
+              let error = "";
               try {
                 const r = await binding!(payload.args);
                 result = JSON.stringify(r);
