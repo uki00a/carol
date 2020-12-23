@@ -29,6 +29,7 @@ jobs:
       with:
         deno-version: 1.6.2
     - name: Run linter
+      if: matrix.os == 'ubuntu-latest'
       run: |
         make lint
     - name: Check rpc.client.ts
