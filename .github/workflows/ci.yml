@@ -8,13 +8,23 @@ on:
       - "**"
 jobs:
   build:
-    runs-on: ubuntu-latest
+    name: ${{ matrix.kind }} ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     steps:
     - uses: actions/checkout@master
-    - name: Install Chrome
+    - name: Install Chrome using apt-get
+      if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
         sudo apt-get install -yqq google-chrome-stable
+    - name: Install Chrome using chocolatey
+      if: matrix.os == 'windows-latest'
+      uses: crazy-max/ghaction-chocolatey@v1
+      with:
+        args: "install googlechrome"
     - uses: denolib/setup-deno@master
       with:
         deno-version: 1.6.2
