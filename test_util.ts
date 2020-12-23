@@ -1,5 +1,7 @@
+import { serve, serveFile } from "./test_deps.ts";
+import type { Server } from "./test_deps.ts";
 import { Chrome, runChrome } from "./chrome.ts";
-import { assert } from "./deps.ts";
+import { assert, deferred, join } from "./deps.ts";
 import { locateChrome } from "./locate.ts";
 import type { Application } from "./application.ts";
 import { launch, LaunchOptions } from "./mod.ts";
@@ -77,4 +79,23 @@ export function test(name: string, fn: () => Promise<void>): void {
       }
     },
   });
+}
+
+interface FileServer {
+  close(): Promise<void>;
+}
+
+export function startFileServer(port: number): FileServer {
+  const server = serve({ port });
+  const serverPromise = (async () => {
+    for await (const req of server) {
+      await req.respond(await serveFile(req, join("testdata/http", req.url)));
+    }
+  })();
+  return {
+    async close() {
+      server.close();
+      await serverPromise;
+    },
+  };
 }
