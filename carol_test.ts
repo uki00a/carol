@@ -56,6 +56,8 @@ import { startFileServer, test, testApp } from "./test_util.ts";
 import { EvaluateError, launch } from "./mod.ts";
 import type { Application } from "./mod.ts";
 
+const isWindows = Deno.build.os === "windows";
+
 async function waitForPageLoad(app: Application): Promise<void> {
   // Wait for page load
   for (let i = 0; i < 10; i++) {
@@ -176,66 +178,86 @@ test("Application#onExit", async () => {
   assert(called);
 });
 
-testApp("Application#serveFolder", async (app) => {
-  const testdataFolder = join(
-    dirname(new URL(import.meta.url).pathname),
-    "testdata",
-    "folder",
-  );
-  app.serveFolder(testdataFolder);
-  await app.load("index.html");
-  // Wait for page load
-  for (let i = 0; i < 10; i++) {
-    const url = await app.evaluate("window.location.href");
-    assertStrictEquals(typeof url, "string");
-    if (url.startsWith("http://")) {
-      break;
-    }
-  }
-  const result = await app.evaluate("document.body.textContent");
-  assertStrictEquals(result, "hello file");
-}, options);
-
-testApp("Application#serveFolder with prefix", async (app) => {
-  const testdataFolder = join(
-    dirname(new URL(import.meta.url).pathname),
-    "testdata",
-    "folder",
-  );
-  app.serveFolder(testdataFolder, "prefix");
-  await app.load("prefix/index.html");
-  await waitForPageLoad(app);
-  const result = await app.evaluate("document.body.textContent");
-  assertStrictEquals(result, "hello file");
-}, options);
-
-testApp("Application#serveOrigin works", async (app) => {
-  const port = 3000;
-  const server = startFileServer(port);
-  try {
-    app.serveOrigin(`http://127.0.0.1:${port}`);
+testApp(
+  "Application#serveFolder",
+  async (app) => {
+    const testdataFolder = join(
+      dirname(new URL(import.meta.url).pathname),
+      "testdata",
+      "folder",
+    );
+    app.serveFolder(testdataFolder);
     await app.load("index.html");
-    await waitForPageLoad(app);
+    // Wait for page load
+    for (let i = 0; i < 10; i++) {
+      const url = await app.evaluate("window.location.href");
+      assertStrictEquals(typeof url, "string");
+      if (url.startsWith("http://")) {
+        break;
+      }
+    }
     const result = await app.evaluate("document.body.textContent");
-    assertStringIncludes(result, "hello http");
-  } finally {
-    await server.close();
-  }
-}, options);
+    assertStrictEquals(result, "hello file");
+  },
+  options,
+  { ignore: isWindows },
+);
 
-testApp("Application#serveOrigin: prefix is respected", async (app) => {
-  const port = 3000;
-  const server = startFileServer(port);
-  try {
-    app.serveOrigin(`http://127.0.0.1:${port}`, "prefix");
+testApp(
+  "Application#serveFolder with prefix",
+  async (app) => {
+    const testdataFolder = join(
+      dirname(new URL(import.meta.url).pathname),
+      "testdata",
+      "folder",
+    );
+    app.serveFolder(testdataFolder, "prefix");
     await app.load("prefix/index.html");
     await waitForPageLoad(app);
     const result = await app.evaluate("document.body.textContent");
-    assertStringIncludes(result, "hello http");
-  } finally {
-    await server.close();
-  }
-}, options);
+    assertStrictEquals(result, "hello file");
+  },
+  options,
+  { ignore: isWindows },
+);
+
+testApp(
+  "Application#serveOrigin works",
+  async (app) => {
+    const port = 3000;
+    const server = startFileServer(port);
+    try {
+      app.serveOrigin(`http://127.0.0.1:${port}`);
+      await app.load("index.html");
+      await waitForPageLoad(app);
+      const result = await app.evaluate("document.body.textContent");
+      assertStringIncludes(result, "hello http");
+    } finally {
+      await server.close();
+    }
+  },
+  options,
+  { ignore: isWindows },
+);
+
+testApp(
+  "Application#serveOrigin: prefix is respected",
+  async (app) => {
+    const port = 3000;
+    const server = startFileServer(port);
+    try {
+      app.serveOrigin(`http://127.0.0.1:${port}`, "prefix");
+      await app.load("prefix/index.html");
+      await waitForPageLoad(app);
+      const result = await app.evaluate("document.body.textContent");
+      assertStringIncludes(result, "hello http");
+    } finally {
+      await server.close();
+    }
+  },
+  options,
+  { ignore: isWindows },
+);
 
 testApp("Application#load", async (app) => {
   await app.load("data:text/html,<html><body>Hello</body></html>");
