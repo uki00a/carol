@@ -1,4 +1,4 @@
-import { dirname, encodeToBase64, fromFileUrl, join } from "../deps.ts";
+import { dirname, encode, encodeToBase64, decode, fromFileUrl, join } from "../deps.ts";
 // @deno-types="https://unpkg.com/typescript@4.0.3/lib/typescript.d.ts"
 import { default as ts } from "https://jspm.dev/typescript@4.0.3/lib/typescript.js";
 
@@ -31,6 +31,20 @@ function validateOutput(output: string): void {
   }
 }
 
+async function formatSource(source: string): Promise<string> {
+  const deno = Deno.run({
+    cmd: [Deno.execPath(), "fmt", "-"],
+    stdin: "piped",
+    stdout: "piped",
+  })
+  await Deno.writeAll(deno.stdin, encode(source));
+  deno.stdin.close();
+  const formattedSource = await Deno.readAll(deno.stdout);
+  deno.stdout.close();
+  deno.close();
+  return decode(formattedSource);
+}
+
 async function main(): Promise<void> {
   const __dirname = dirname(fromFileUrl(import.meta.url));
   const rootDir = join(__dirname, "..");
@@ -38,7 +52,7 @@ async function main(): Promise<void> {
   validateOutput(output);
   await Deno.writeTextFile(
     join(rootDir, "rpc.out.ts"),
-    `export default "${encodeToBase64(output)}";`, // Maybe we should escape `output`...
+    await formatSource(`export default "${encodeToBase64(output)}";`), // Maybe we should escape `output`...
   );
 }
 

@@ -11,4 +11,4 @@ example:
 	deno run --allow-env --allow-read --allow-write --allow-run --allow-net examples/hello.ts
 
 rpc:
-	deno run --allow-read --allow-write ./tools/generate_rpc.ts
+	deno run --allow-read --allow-write --allow-run ./tools/generate_rpc.ts
