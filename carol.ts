@@ -808,7 +808,7 @@ function contentType(
 }
 
 export async function launch(
-  options_: Partial<LaunchOptions> = {},
+  options_: LaunchOptions = {},
 ): Promise<Application> {
   const options = Object.assign(options_) as LaunchOptions;
   const logger = options.logger ?? createLogger();
