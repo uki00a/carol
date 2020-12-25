@@ -1,4 +1,11 @@
-import { dirname, encode, encodeToBase64, decode, fromFileUrl, join } from "../deps.ts";
+import {
+  decode,
+  dirname,
+  encode,
+  encodeToBase64,
+  fromFileUrl,
+  join,
+} from "../deps.ts";
 // @deno-types="https://unpkg.com/typescript@4.0.3/lib/typescript.d.ts"
 import { default as ts } from "https://jspm.dev/typescript@4.0.3/lib/typescript.js";
 
@@ -36,7 +43,7 @@ async function formatSource(source: string): Promise<string> {
     cmd: [Deno.execPath(), "fmt", "-"],
     stdin: "piped",
     stdout: "piped",
-  })
+  });
   await Deno.writeAll(deno.stdin, encode(source));
   deno.stdin.close();
   const formattedSource = await Deno.readAll(deno.stdout);
