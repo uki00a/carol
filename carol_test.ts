@@ -237,17 +237,6 @@ testApp("Application#serveOrigin: prefix is respected", async (app) => {
   }
 }, options);
 
-test("custom executablePath", async () => {
-  await assertThrowsAsync(async () => {
-    await launch({
-      executablePath: "/",
-      width: 480,
-      height: 320,
-      args: ["--headless"],
-    });
-  }, Deno.errors.PermissionDenied); // TODO Is this correct? (PermissionDenied)
-});
-
 testApp("Application#load", async (app) => {
   await app.load("data:text/html,<html><body>Hello</body></html>");
 
@@ -267,3 +256,14 @@ testApp("Application#load", async (app) => {
 
   assertStrictEquals(res, "Hello");
 }, options);
+
+test("custom executablePath", async () => {
+  await assertThrowsAsync(async () => {
+    await launch({
+      executablePath: "/",
+      width: 480,
+      height: 320,
+      args: ["--headless"],
+    });
+  }, Deno.errors.PermissionDenied); // TODO Is this correct? (PermissionDenied)
+});
