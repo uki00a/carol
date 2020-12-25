@@ -18,11 +18,13 @@ export function testApp(
       await fn(app);
     } finally {
       await app.exit();
-      await new Promise<void>((resolve, _) =>
-        setTimeout(() => {
-          resolve();
-        }, 300)
-      );
+      if (Deno.env.get("CI")) {
+        await new Promise<void>((resolve, _) =>
+          setTimeout(() => {
+            resolve();
+          }, 1000)
+        );
+      }
     }
   });
 }
