@@ -18,14 +18,6 @@ export function testApp(
       await fn(app);
     } finally {
       await app.exit();
-      // FIXME Tests are flaky on CI... As a workaround, We put a short delay.
-      if (Deno.env.get("CI")) {
-        await new Promise<void>((resolve, _) =>
-          setTimeout(() => {
-            resolve();
-          }, 1000)
-        );
-      }
     }
   });
 }
@@ -36,7 +28,20 @@ export function test(name: string, fn: () => Promise<void>): void {
     sanitizeResources: false,
     ignore: chromeDoesNotExist,
     name,
-    fn,
+    fn: async () => {
+      try {
+        await fn();
+      } finally {
+        // FIXME Tests are flaky on CI. As a workaround, We put a short delay.
+        if (Deno.env.get("CI")) {
+          await new Promise<void>((resolve, _) =>
+            setTimeout(() => {
+              resolve();
+            }, 1000)
+          );
+        }
+      }
+    },
   });
 }
 
