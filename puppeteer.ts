@@ -92,8 +92,13 @@ function prepareChromeArgs(
     args = [],
     userDataDir = null,
   } = options;
+
   if (userDataDir) {
     chromeArguments.push(`--user-data-dir=${resolve(userDataDir)}`);
+  } else {
+    const __dirname = dirname(fromFileUrl(import.meta.url));
+    const localDataDir = options.localDataDir || join(__dirname, ".local-data");
+    chromeArguments.push(`--user-data-dir=${localDataDir}`);
   }
   if (headless) {
     chromeArguments.push("--headless", "--hide-scrollbars", "--mute-audio");
@@ -103,10 +108,6 @@ function prepareChromeArgs(
   }
   chromeArguments.push(...args);
   chromeArguments.push("--remote-debugging-port=0");
-
-  const __dirname = dirname(fromFileUrl(import.meta.url));
-  const localDataDir = options.localDataDir || join(__dirname, ".local-data");
-  chromeArguments.push(`--user-data-dir=${userDataDir ?? localDataDir}`);
 
   return chromeArguments;
 }
