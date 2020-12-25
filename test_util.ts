@@ -37,7 +37,7 @@ export function test(name: string, fn: () => Promise<void>): void {
           await new Promise<void>((resolve, _) =>
             setTimeout(() => {
               resolve();
-            }, 3000)
+            }, 5000)
           );
         }
       }
