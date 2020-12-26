@@ -14,7 +14,6 @@ export {
 } from "https://deno.land/std@0.82.0/encoding/base64.ts";
 export { deferred } from "https://deno.land/std@0.82.0/async/deferred.ts";
 export type { Deferred } from "https://deno.land/std@0.82.0/async/deferred.ts";
-export { sprintf } from "https://deno.land/std@0.82.0/fmt/printf.ts";
 export {
   assert,
   assertEquals,
