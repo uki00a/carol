@@ -56,8 +56,6 @@ import { startFileServer, test, testApp } from "./test_util.ts";
 import { EvaluateError, launch } from "./mod.ts";
 import type { Application } from "./mod.ts";
 
-const isWindows = Deno.build.os === "windows";
-
 async function waitForPageLoad(app: Application): Promise<void> {
   // Wait for page load
   for (let i = 0; i < 10; i++) {
@@ -200,7 +198,6 @@ testApp(
     assertStrictEquals(result, "hello file");
   },
   options,
-  { ignore: isWindows },
 );
 
 testApp(
@@ -218,7 +215,6 @@ testApp(
     assertStrictEquals(result, "hello file");
   },
   options,
-  { ignore: isWindows },
 );
 
 testApp(
@@ -237,7 +233,6 @@ testApp(
     }
   },
   options,
-  { ignore: isWindows },
 );
 
 testApp(
@@ -256,7 +251,6 @@ testApp(
     }
   },
   options,
-  { ignore: isWindows },
 );
 
 testApp("Application#load", async (app) => {

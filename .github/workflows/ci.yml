@@ -33,6 +33,7 @@ jobs:
       run: |
         make lint
     - name: Check rpc.client.ts
+      if: matrix.os == 'ubuntu-latest'
       run: |
         make rpc_client
         git diff --exit-code
