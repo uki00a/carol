@@ -1,4 +1,4 @@
-.PHONY: test lint example rpc
+.PHONY: test lint example rpc_client
 
 lint:
 	deno fmt --check
@@ -10,5 +10,5 @@ test:
 example:
 	deno run --allow-env --allow-read --allow-write --allow-run --allow-net examples/hello.ts
 
-rpc:
-	deno run --allow-read --allow-write --allow-run ./tools/generate_rpc.ts
+rpc_client:
+	deno run --allow-read --allow-write --allow-run ./tools/generate_rpc_client.ts

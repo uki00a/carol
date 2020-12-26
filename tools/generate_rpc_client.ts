@@ -58,8 +58,8 @@ async function main(): Promise<void> {
   const output = await transpileRpcModule(rootDir);
   validateOutput(output);
   await Deno.writeTextFile(
-    join(rootDir, "rpc.out.ts"),
-    await formatSource(`export default "${encodeToBase64(output)}";`), // Maybe we should escape `output`...
+    join(rootDir, "rpc.client.ts"),
+    await formatSource(`export const BASE64_ENCODED_RPC_CLIENT_SOURCE = "${encodeToBase64(output)}";`), // Maybe we should escape `output`...
   );
 }
 

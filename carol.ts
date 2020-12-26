@@ -39,7 +39,7 @@ import { HttpRequest } from "./http_request.ts";
 import type { HttpHandler, HttpRequestParams } from "./http_request.ts";
 import { Color } from "./color.ts";
 import { rpc } from "./rpc/mod.ts";
-import BASE64_ENCODED_RPC_SOURCE from "./rpc.out.ts";
+import { BASE64_ENCODED_RPC_CLIENT_SOURCE } from "./rpc.client.ts";
 import type { HandleProxy } from "./rpc/mod.ts";
 import { features } from "./features/mod.js";
 import type * as Messages from "./rpc/messages.ts";
@@ -592,7 +592,7 @@ class Window extends EventEmitter {
           },
         );
       },
-      decode(decodeFromBase64(BASE64_ENCODED_RPC_SOURCE)),
+      decode(decodeFromBase64(BASE64_ENCODED_RPC_CLIENT_SOURCE)),
       features.map((f) => f.toString()),
     );
   }
