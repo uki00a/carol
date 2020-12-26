@@ -34,6 +34,12 @@ app.serveFolder(folder); // Serve contents from "./public" folder
 await app.load("index.html");
 ```
 
+## Links
+
+- [API Documentation](https://doc.deno.land/https/deno.land/x/carol/mod.ts)
+- [carlo](https://github.com/GoogleChromeLabs/carlo)
+- [lorca](https://github.com/zserge/lorca)
+
 ## License
 
 - This module contains code adopted from the following projects. They have preserved their individual licenses and copyrights.
