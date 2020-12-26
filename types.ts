@@ -59,13 +59,13 @@ export interface Application {
   // deno-lint-ignore ban-types
   exposeFunction(name: string, func: Function): Promise<unknown[]>;
 
-  // deno-lint-ignore no-explicit-any, ban-types
   /**
    * This is equivalent to `app.mainWindow().evaluate()`.
    *
    * @param pageFunction to be evaluated in the page context
    * @param args passed into `pageFunction`
    */
+  // deno-lint-ignore no-explicit-any, ban-types
   evaluate(pageFunction: Function | string, ...args: unknown[]): Promise<any>;
 
   /**

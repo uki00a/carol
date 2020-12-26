@@ -17,6 +17,14 @@ export function testApp(
     try {
       await fn(app);
     } finally {
+      // FIXME Tests are flaky on CI. As a workaround, We put a short delay.
+      if (Deno.env.get("CI")) {
+        await new Promise<void>((resolve, _) =>
+          setTimeout(() => {
+            resolve();
+          }, 2000)
+        );
+      }
       await app.exit();
     }
   });
@@ -36,15 +44,6 @@ export function test(name: string, fn: () => Promise<void>): void {
           if (resources[rid] === "webSocketStream") {
             Deno.close(Number(rid));
           }
-        }
-
-        // FIXME Tests are flaky on CI. As a workaround, We put a short delay.
-        if (Deno.env.get("CI")) {
-          await new Promise<void>((resolve, _) =>
-            setTimeout(() => {
-              resolve();
-            }, 2000)
-          );
         }
       }
     },
