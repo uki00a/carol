@@ -22,7 +22,7 @@ export function testApp(
         await new Promise<void>((resolve, _) =>
           setTimeout(() => {
             resolve();
-          }, 5000)
+          }, 10000)
         );
       }
       await app.exit();
