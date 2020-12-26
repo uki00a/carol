@@ -7,6 +7,10 @@ export interface AppOptions {
   bgcolor?: string;
   localDataDir?: string;
   userDataDir?: string;
+
+  /**
+   * Window title
+   */
   title?: string;
   args?: string[];
   paramsForReuse?: unknown;

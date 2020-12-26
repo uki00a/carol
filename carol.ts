@@ -48,10 +48,21 @@ const __dirname = dirname(fromFileUrl(import.meta.url));
 
 let testMode = false;
 
+/**
+ * Thrown when `Application.evaluate`/`Window.evaluate` fails.
+ */
 export class EvaluateError extends Error {}
 
 export interface LaunchOptions extends AppOptions {
+  /**
+   * A logger used to log debug information.
+   */
   logger?: Logger;
+
+  /**
+   * Path to a Chrome executable file.
+   * If this options is not set, carol automatically locates a Chrome executable file.
+   */
   executablePath?: string;
 }
 
@@ -840,6 +851,9 @@ function contentType(
   }
 }
 
+/**
+ * Launches the app and returns `Application` object.
+ */
 export async function launch(
   options_: LaunchOptions = {},
 ): Promise<Application> {
