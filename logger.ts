@@ -1,9 +1,4 @@
-export interface Logger {
-  log(message: unknown, ...args: unknown[]): void;
-  error(message: unknown, ...args: unknown[]): void;
-  debug(message: unknown, ...args: unknown[]): void;
-}
-
+import type { Logger } from "./types.ts";
 const noop = () => {};
 const NullLogger = {
   log: noop,

@@ -5,13 +5,14 @@
 [![license](https://img.shields.io/github/license/uki00a/carol.svg)](https://github.com/uki00a/carol)
 [![deno doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https/deno.land/x/carol/mod.ts)
 
-**Note: This module is still work in progress**.
+**Note: This module is still work in progress.**
 
-This module is made to build desktop applications using Deno and HTML.
+Carol is a deno module to build desktop applications using Deno, HTML, and Google Chrome. This module is a port of [carlo](https://github.com/GoogleChromeLabs/carlo) to Deno.
 
-It uses locally-installed Google Chrome to provide UI.
+## Requirements
 
-It's based on excellent works of [lorca](https://github.com/zserge/lorca) and [carlo](https://github.com/GoogleChromeLabs/carlo).
+- Deno🦕
+- Google Chrome (Carol uses locally-installed Google Chrome to provide UI.)
 
 ## Examples
 
@@ -33,7 +34,15 @@ app.serveFolder(folder); // Serve contents from "./public" folder
 await app.load("index.html");
 ```
 
+## Links
+
+- [API Documentation](https://doc.deno.land/https/deno.land/x/carol/mod.ts)
+- [carlo](https://github.com/GoogleChromeLabs/carlo)
+- [lorca](https://github.com/zserge/lorca)
+
 ## License
 
-- This module contains substantial parts based on other libraries. They have preserved their individual licenses and copyrights.
+- This module contains code adopted from the following projects. They have preserved their individual licenses and copyrights.
+  - [carlo](https://github.com/GoogleChromeLabs/carlo)
+  - [lorca](https://github.com/zserge/lorca)
 - Additional work with this module is licensed under the MIT license.
