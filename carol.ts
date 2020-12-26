@@ -630,6 +630,8 @@ class Window extends EventEmitter implements types.Window {
         return;
       }
       const fileName = join(folder!, pathname);
+      console.log("[fileName]");
+      console.log(fileName);
       if (!await exists(fileName)) {
         continue;
       }
