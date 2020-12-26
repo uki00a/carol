@@ -87,19 +87,75 @@ interface Carol {
 }
 
 export interface Application {
+  /**
+   * Close the app windows.
+   */
   exit(): Promise<void>;
+
+  /**
+   * Returns the promise that will be resolved when the app is closed.
+   */
   onExit(): Promise<void>;
+
+  /**
+   * @return main window.
+   */
   mainWindow(): Window;
+
+  /**
+   * Creates a new window.
+   */
   createWindow(): Promise<Window>;
+
+  /**
+   * Returns all currently opened windows.
+   */
   windows(): Window[];
+
+  /**
+   * Adds a function called `name` to the page's `window` object.
+   */
   // deno-lint-ignore ban-types
   exposeFunction(name: string, func: Function): Promise<unknown[]>;
+
   // deno-lint-ignore no-explicit-any, ban-types
+  /**
+   * This is equivalent to `app.mainWindow().evaluate()`.
+   *
+   * @param pageFunction to be evaluated in the page context
+   * @param args passed into `pageFunction`
+   */
   evaluate(pageFunction: Function | string, ...args: unknown[]): Promise<any>;
+
+  /**
+   * @param folder Folder with the web content.
+   * @param prefix Only serve folder for requests with given prefix.
+   */
   serveFolder(folder?: string, prefix?: string): void;
+
+  /**
+   * Serves pages from given origin, eg `http://localhost:8080`.
+   * This can be used for the fast development mode available in web frameworks.
+   *
+   * @param prefix Only serve folder for requests with given prefix.
+   */
   serveOrigin(base: string, prefix?: string): void;
+
+  /**
+   * Calls given `handler` for each request and allows called to handle it.
+   *
+   * @param handler to be used for each request.
+   */
   serveHandler(handler: HttpHandler): void;
+
+  /**
+   * This is equivalent to `app.mainWindow().load()`.
+   */
   load(uri?: string, ...params: unknown[]): Promise<unknown>;
+
+  /**
+   * Set the application icon shown in the OS dock / task swicher.
+   */
   setIcon(icon: string | Uint8Array): Promise<void>;
 }
 
@@ -177,9 +233,6 @@ class ApplicationImpl extends EventEmitter implements Application {
     return result;
   }
 
-  /**
-   * Close the app windows.
-   */
   async exit(): Promise<void> {
     this.logger_.debug("[app] app.exit...");
     if (this.exited_) {
@@ -202,9 +255,6 @@ class ApplicationImpl extends EventEmitter implements Application {
     return this.done_;
   }
 
-  /**
-   * @return main window.
-   */
   mainWindow(): Window {
     for (const window of this.windows_.values()) {
       return window;
@@ -262,31 +312,16 @@ class ApplicationImpl extends EventEmitter implements Application {
     return this.mainWindow().evaluate(pageFunction, ...args);
   }
 
-  /**
-   * @param folder Folder with the web content.
-   * @param prefix Only serve folder for requests with given prefix.
-   */
   serveFolder(folder = "", prefix = ""): void {
     this.www_.push({ folder, prefix: wrapPrefix(prefix) });
   }
 
-  /**
-   * Serves pages from given origin, eg `http://localhost:8080`.
-   * This can be used for the fast development mode available in web frameworks.
-   *
-   * @param prefix Only serve folder for requests with given prefix.
-   */
   serveOrigin(base: string, prefix = "") {
     this.www_.push(
       { baseURL: new URL(base + "/"), prefix: wrapPrefix(prefix) },
     );
   }
 
-  /**
-   * Calls given handler for each request and allows called to handle it.
-   *
-   * @param handler to be used for each request.
-   */
   serveHandler(handler: HttpHandler): void {
     this.httpHandler_ = handler;
   }
@@ -295,9 +330,6 @@ class ApplicationImpl extends EventEmitter implements Application {
     return this.mainWindow()!.load(uri, ...params);
   }
 
-  /**
-   * Set the application icon shown in the OS dock / task swicher.
-   */
   async setIcon(icon: string | Uint8Array): Promise<void> {
     const buffer = typeof icon === "string" ? await Deno.readFile(icon) : icon;
     this.session_.send("Browser.setDockTile", { image: encodeToBase64(buffer) })
@@ -330,7 +362,7 @@ class ApplicationImpl extends EventEmitter implements Application {
     const params = this.pendingWindows_.get(seq);
     const { callback, options } = params || { options: this.options_ };
     this.pendingWindows_.delete(seq);
-    const window = new Window(this, page, this.logger_, options);
+    const window = new CarolWindow(this, page, this.logger_, options);
     await window.init_();
     this.windows_.set(page, window);
     if (callback) {
@@ -360,6 +392,7 @@ class Window extends EventEmitter {
   private readonly options_: AppOptions;
   private readonly www_: WWW = [];
   private _lastWebWorldId?: string;
+
   /**
    * @private
    */
@@ -371,8 +404,8 @@ class Window extends EventEmitter {
    * @private
    */
   loadURI_!: string;
-  private loadParams_!: unknown[];
 
+  private loadParams_!: unknown[];
   private domContentLoadedCallback_?: () => void;
   private windowId_: unknown;
   private interceptionInitialized_ = false;
