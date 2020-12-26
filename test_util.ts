@@ -24,21 +24,18 @@ export function testApp(
 
 export function test(name: string, fn: () => Promise<void>): void {
   Deno.test({
-    // TODO `WebSocket#close seems not to remove a resource from ResourceTable...`
-    sanitizeResources: false,
     ignore: chromeDoesNotExist,
     name,
     fn: async () => {
       try {
         await fn();
       } finally {
-        // FIXME Tests are flaky on CI. As a workaround, We put a short delay.
-        if (Deno.env.get("CI")) {
-          await new Promise<void>((resolve, _) =>
-            setTimeout(() => {
-              resolve();
-            }, 5000)
-          );
+        // FIXME `WebSocket#close seems not to remove a resource from ResourceTable...`
+        const resources = Deno.resources() as Record<string, string>;
+        for (const rid of Object.keys(resources)) {
+          if (resources[rid] === "webSocketStream") {
+            Deno.close(Number(rid));
+          }
         }
       }
     },
