@@ -26,7 +26,7 @@ import {
   resolve,
 } from "./deps.ts";
 import type { Browser, Target } from "./deps.ts";
-import type { AppOptions } from "./options.ts";
+import type { AppOptions } from "./types.ts";
 
 interface LaunchResult {
   browser: Browser;

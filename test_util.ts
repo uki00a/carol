@@ -1,7 +1,7 @@
 import { serve, serveFile } from "./test_deps.ts";
 import { join } from "./deps.ts";
 import { locateChrome } from "./locate.ts";
-import type { Application, LaunchOptions } from "./mod.ts";
+import type { Application, AppOptions } from "./mod.ts";
 import { launch } from "./mod.ts";
 
 const chromeExecutable = await locateChrome();
@@ -10,7 +10,7 @@ const chromeDoesNotExist = !chromeExecutable;
 export function testApp(
   name: string,
   fn: (app: Application) => Promise<void>,
-  options: LaunchOptions,
+  options: AppOptions,
 ): void {
   test(name, async () => {
     const app = await launch(options);

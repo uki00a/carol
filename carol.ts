@@ -32,11 +32,10 @@ import {
 import type { Browser, CDPSession, Page, Target } from "./deps.ts";
 import { launch as launchPuppeteer } from "./puppeteer.ts";
 import { createLogger } from "./logger.ts";
-import type { Logger } from "./logger.ts";
-import type { AppOptions } from "./options.ts";
+import type * as types from "./types.ts";
 import { locateChrome } from "./locate.ts";
 import { HttpRequest } from "./http_request.ts";
-import type { HttpHandler, HttpRequestParams } from "./http_request.ts";
+import type { HttpRequestParams } from "./http_request.ts";
 import { Color } from "./color.ts";
 import { rpc } from "./rpc/mod.ts";
 import { BASE64_ENCODED_RPC_CLIENT_SOURCE } from "./rpc.client.ts";
@@ -53,29 +52,9 @@ let testMode = false;
  */
 export class EvaluateError extends Error {}
 
-export interface LaunchOptions extends AppOptions {
-  /**
-   * A logger used to log debug information.
-   */
-  logger?: Logger;
-
-  /**
-   * Path to a Chrome executable file.
-   * If this options is not set, carol automatically locates a Chrome executable file.
-   */
-  executablePath?: string;
-}
-
 interface PendingWindow {
   callback(window: Window): void;
-  options: AppOptions;
-}
-
-interface Bounds {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
+  options: types.AppOptions;
 }
 
 type WWW = Array<{
@@ -97,80 +76,7 @@ interface Carol {
   loadParams(): Promise<unknown>;
 }
 
-export interface Application {
-  /**
-   * Close the app windows.
-   */
-  exit(): Promise<void>;
-
-  /**
-   * Returns the promise that will be resolved when the app is closed.
-   */
-  onExit(): Promise<void>;
-
-  /**
-   * @return main window.
-   */
-  mainWindow(): Window;
-
-  /**
-   * Creates a new window.
-   */
-  createWindow(): Promise<Window>;
-
-  /**
-   * Returns all currently opened windows.
-   */
-  windows(): Window[];
-
-  /**
-   * Adds a function called `name` to the page's `window` object.
-   */
-  // deno-lint-ignore ban-types
-  exposeFunction(name: string, func: Function): Promise<unknown[]>;
-
-  // deno-lint-ignore no-explicit-any, ban-types
-  /**
-   * This is equivalent to `app.mainWindow().evaluate()`.
-   *
-   * @param pageFunction to be evaluated in the page context
-   * @param args passed into `pageFunction`
-   */
-  evaluate(pageFunction: Function | string, ...args: unknown[]): Promise<any>;
-
-  /**
-   * @param folder Folder with the web content.
-   * @param prefix Only serve folder for requests with given prefix.
-   */
-  serveFolder(folder?: string, prefix?: string): void;
-
-  /**
-   * Serves pages from given origin, eg `http://localhost:8080`.
-   * This can be used for the fast development mode available in web frameworks.
-   *
-   * @param prefix Only serve folder for requests with given prefix.
-   */
-  serveOrigin(base: string, prefix?: string): void;
-
-  /**
-   * Calls given `handler` for each request and allows called to handle it.
-   *
-   * @param handler to be used for each request.
-   */
-  serveHandler(handler: HttpHandler): void;
-
-  /**
-   * This is equivalent to `app.mainWindow().load()`.
-   */
-  load(uri?: string, ...params: unknown[]): Promise<unknown>;
-
-  /**
-   * Set the application icon shown in the OS dock / task swicher.
-   */
-  setIcon(icon: string | Uint8Array): Promise<void>;
-}
-
-class ApplicationImpl extends EventEmitter implements Application {
+class Application extends EventEmitter implements types.Application {
   /**
    * @private
    */
@@ -192,7 +98,7 @@ class ApplicationImpl extends EventEmitter implements Application {
   /**
    * @private
    */
-  httpHandler_: HttpHandler | null = null;
+  httpHandler_: types.HttpHandler | null = null;
   private readonly pendingWindows_ = new Map<string, PendingWindow>();
   private readonly windows_ = new Map<Page, Window>();
   private readonly done_ = deferred<void>();
@@ -200,9 +106,9 @@ class ApplicationImpl extends EventEmitter implements Application {
   constructor(
     private readonly browser: Browser,
     private readonly chromeProcess: Deno.Process,
-    private readonly logger_: Logger,
+    private readonly logger_: types.Logger,
     /** @private */
-    readonly options_: AppOptions,
+    readonly options_: types.AppOptions,
   ) {
     super();
   }
@@ -259,7 +165,7 @@ class ApplicationImpl extends EventEmitter implements Application {
     this.chromeProcess.close();
     await this.browser.close();
     this.done_.resolve();
-    this.emit(ApplicationImpl.Events.Exit, null);
+    this.emit(Application.Events.Exit, null);
   }
 
   onExit(): Promise<void> {
@@ -274,13 +180,13 @@ class ApplicationImpl extends EventEmitter implements Application {
   }
 
   createWindow(
-    options_: Partial<AppOptions> = {},
+    options_: Partial<types.AppOptions> = {},
   ): Promise<Window> {
     const options = Object.assign(
       {},
       this.options_,
       options_,
-    ) as AppOptions;
+    ) as types.AppOptions;
     const seq = String(++this.windowSeq_);
     if (!this.windows_.size) {
       throw new Error("Needs at least one window to create more.");
@@ -333,7 +239,7 @@ class ApplicationImpl extends EventEmitter implements Application {
     );
   }
 
-  serveHandler(handler: HttpHandler): void {
+  serveHandler(handler: types.HttpHandler): void {
     this.httpHandler_ = handler;
   }
 
@@ -373,13 +279,13 @@ class ApplicationImpl extends EventEmitter implements Application {
     const params = this.pendingWindows_.get(seq);
     const { callback, options } = params || { options: this.options_ };
     this.pendingWindows_.delete(seq);
-    const window = new CarolWindow(this, page, this.logger_, options);
+    const window = new Window(this, page, this.logger_, options);
     await window.init_();
     this.windows_.set(page, window);
     if (callback) {
       callback(window);
     }
-    this.emit(ApplicationImpl.Events.Window, window);
+    this.emit(Application.Events.Window, window);
   }
 
   /**
@@ -399,8 +305,8 @@ class ApplicationImpl extends EventEmitter implements Application {
   };
 }
 
-class Window extends EventEmitter {
-  private readonly options_: AppOptions;
+class Window extends EventEmitter implements types.Window {
+  private readonly options_: types.AppOptions;
   private readonly www_: WWW = [];
   private _lastWebWorldId?: string;
 
@@ -409,7 +315,7 @@ class Window extends EventEmitter {
    */
   session_!: CDPSession;
   private paramsForReuse_: unknown;
-  private httpHandler_: HttpHandler | null = null;
+  private httpHandler_: types.HttpHandler | null = null;
 
   /**
    * @private
@@ -427,13 +333,13 @@ class Window extends EventEmitter {
     /**
      * @private
      */
-    readonly app_: ApplicationImpl,
+    readonly app_: Application,
     /**
      * @private
      */
     readonly page_: Page,
-    private readonly logger_: Logger,
-    options: AppOptions,
+    private readonly logger_: types.Logger,
+    options: types.AppOptions,
   ) {
     super();
     this.options_ = Object.assign({}, app_.options_, options);
@@ -514,12 +420,6 @@ class Window extends EventEmitter {
     this.www_.push({ folder, prefix: wrapPrefix(prefix) });
   }
 
-  /**
-   * Serves pages from given origin, eg `http://localhost:8080`.
-   * This can be used for the fast development mode available in web frameworks.
-   *
-   * @param prefix Only serve folder for requests with given prefix.
-   */
   serveOrigin(base: string, prefix = "") {
     this.www_.push(
       { baseURL: new URL(base + "/"), prefix: wrapPrefix(prefix) },
@@ -531,7 +431,7 @@ class Window extends EventEmitter {
    *
    * @param handler to be used for each request.
    */
-  serveHandler(handler: HttpHandler) {
+  serveHandler(handler: types.HttpHandler) {
     this.httpHandler_ = handler;
   }
 
@@ -694,7 +594,7 @@ class Window extends EventEmitter {
 
   requestIntercepted_(payload: HttpRequestParams): void {
     this.logger_.debug("[server] intercepted:", payload.request.url);
-    const handlers = [] as HttpHandler[];
+    const handlers = [] as types.HttpHandler[];
     if (this.httpHandler_) {
       handlers.push(this.httpHandler_);
     }
@@ -705,7 +605,7 @@ class Window extends EventEmitter {
     new HttpRequest(this.session_, this.logger_, payload, handlers);
   }
 
-  async handleRequest_(request: HttpRequest): Promise<void> {
+  async handleRequest_(request: types.HttpRequest): Promise<void> {
     const url = new URL(request.url());
     this.logger_.debug("[server] request url:", url.toString());
 
@@ -744,7 +644,7 @@ class Window extends EventEmitter {
     request.deferToBrowser();
   }
 
-  async bounds(): Promise<Bounds> {
+  async bounds(): Promise<types.Bounds> {
     const { bounds } = await this.app_.session_.send(
       "Browser.getWindowBounds",
       { windowId: this.windowId_ },
@@ -757,7 +657,7 @@ class Window extends EventEmitter {
     };
   }
 
-  async setBounds(bounds: Bounds): Promise<void> {
+  async setBounds(bounds: types.Bounds): Promise<void> {
     await this.app_.session_.send(
       "Browser.setWindowBounds",
       { windowId: this.windowId_, bounds },
@@ -832,7 +732,7 @@ const fontContentTypes = new Map([
 ]);
 
 function contentType(
-  request: HttpRequest,
+  request: types.HttpRequest,
   fileName: string,
 ): string | undefined {
   const dotIndex = fileName.lastIndexOf(".");
@@ -855,9 +755,9 @@ function contentType(
  * Launches the app and returns `Application` object.
  */
 export async function launch(
-  options_: LaunchOptions = {},
-): Promise<Application> {
-  const options = Object.assign(options_) as LaunchOptions;
+  options_: types.AppOptions = {},
+): Promise<types.Application> {
+  const options = Object.assign(options_) as types.AppOptions;
   const logger = options.logger ?? createLogger();
   logger.debug("[app] Launching Carlo", options_);
   if (!options.bgcolor) {
@@ -898,19 +798,12 @@ export async function launch(
   options.args = args;
 
   try {
-    // const browser = await puppeteer.launch({
-    //   executablePath,
-    //   pipe: true,
-    //   defaultViewport: null,
-    //   headless: testMode,
-    //   userDataDir: options.userDataDir || join(options.localDataDir, `profile-${type}`),
-    //   args });
     const { browser, chromeProcess } = await launchPuppeteer(
       executablePath,
       testMode,
       options,
     );
-    const app = new ApplicationImpl(browser, chromeProcess, logger, options);
+    const app = new Application(browser, chromeProcess, logger, options);
     await app.init_();
     return app;
   } catch (e) {

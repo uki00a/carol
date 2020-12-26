@@ -19,7 +19,7 @@
 
 import { concat, encode, encodeToBase64 } from "./deps.ts";
 import type { CDPSession } from "./deps.ts";
-import type { Logger } from "./logger.ts";
+import type * as types from "./types.ts";
 
 const statusTexts = {
   "100": "Continue",
@@ -84,10 +84,6 @@ const statusTexts = {
   "511": "Network Authentication Required",
 };
 
-export interface HttpHandler {
-  (request: HttpRequest): void | Promise<void>;
-}
-
 export interface HttpRequestParams {
   request: Request;
   resourceType: string;
@@ -100,13 +96,6 @@ interface Request {
   headers: Record<string, string>;
 }
 
-interface Overrides {
-  url?: string;
-  string?: string;
-  method?: string;
-  headers?: Record<string, string>;
-}
-
 interface ResolveParams {
   url?: string;
   method?: string;
@@ -116,17 +105,14 @@ interface ResolveParams {
   errorReason?: string;
 }
 
-/**
- * Intercepted request instance that can be resolved to the client's liking.
- */
-export class HttpRequest {
+export class HttpRequest implements types.HttpRequest {
   done_ = false;
 
   constructor(
     readonly session_: CDPSession,
-    readonly logger_: Logger,
+    readonly logger_: types.Logger,
     readonly params_: HttpRequestParams,
-    readonly handlers_: HttpHandler[],
+    readonly handlers_: types.HttpHandler[],
   ) {
     this.callNextHandler_();
   }
@@ -139,9 +125,6 @@ export class HttpRequest {
     return this.params_.request.method;
   }
 
-  /**
-   * @return HTTP request headers.
-   */
   headers(): Record<string, string> {
     return this.params_.request.headers || {};
   }
@@ -150,38 +133,22 @@ export class HttpRequest {
     return this.params_.resourceType;
   }
 
-  /**
-   * Aborts the request.
-   */
   abort() {
     this.logger_.debug("[server] abort", this.url());
     return this.resolve_({ errorReason: "Aborted" });
   }
 
-  /**
-   * Fails the request.
-   */
   fail() {
     this.logger_.debug("[server] fail", this.url());
     return this.resolve_({ errorReason: "Failed" });
   }
 
-  /**
-   * Falls through to the next handler.
-   */
   continue() {
     this.logger_.debug("[server] continue", this.url());
     return this.callNextHandler_();
   }
 
-  /**
-   * Continues the request with the provided overrides to the url, method or
-   * headers.
-   *
-   * @param overrides
-   * Overrides to apply to the request before it hits network.
-   */
-  deferToBrowser(overrides?: Overrides) {
+  deferToBrowser(overrides?: types.Overrides) {
     this.logger_.debug("[server] deferToBrowser", this.url());
     const params = {} as ResolveParams;
     if (overrides && overrides.url) params.url = overrides.url;
@@ -190,9 +157,6 @@ export class HttpRequest {
     return this.resolve_(params);
   }
 
-  /**
-   * Fulfills the request with the given data.
-   */
   fulfill({
     status = 200,
     headers,
@@ -243,9 +207,6 @@ export class HttpRequest {
     this.resolve_({});
   }
 
-  /**
-   * Aborts the request.
-   */
   resolve_(params: ResolveParams): Promise<unknown> {
     this.logger_.debug("[server] resolve", this.url());
     if (this.done_) throw new Error("Already resolved given request");
