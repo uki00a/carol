@@ -50,6 +50,7 @@ import {
   assertStringIncludes,
   assertThrowsAsync,
   dirname,
+  fromFileUrl,
   join,
 } from "./deps.ts";
 import { startFileServer, test, testApp } from "./test_util.ts";
@@ -180,7 +181,7 @@ testApp(
   "Application#serveFolder",
   async (app) => {
     const testdataFolder = join(
-      dirname(new URL(import.meta.url).pathname),
+      dirname(fromFileUrl(import.meta.url)),
       "testdata",
       "folder",
     );
@@ -204,7 +205,7 @@ testApp(
   "Application#serveFolder with prefix",
   async (app) => {
     const testdataFolder = join(
-      dirname(new URL(import.meta.url).pathname),
+      dirname(fromFileUrl(import.meta.url)),
       "testdata",
       "folder",
     );
