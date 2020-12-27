@@ -18,7 +18,7 @@ Carol is a deno module to build desktop applications using Deno, HTML, and Googl
 
 ```typescript
 import { launch } from "https://deno.land/x/carol@v1.0.0/mod.ts";
-import { dirname, join } from "https://deno.land/std@0.82.0/path/mod.ts";
+import { dirname, fromFileUrl, join } from "https://deno.land/std@0.82.0/path/mod.ts";
 
 const app = await launch({
   title: "Hello Deno!",
