@@ -5,8 +5,6 @@
 [![license](https://img.shields.io/github/license/uki00a/carol.svg)](https://github.com/uki00a/carol)
 [![deno doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https/deno.land/x/carol/mod.ts)
 
-**Note: This module is still work in progress.**
-
 Carol is a deno module to build desktop applications using Deno, HTML, and Google Chrome. This module is a port of [carlo](https://github.com/GoogleChromeLabs/carlo) to Deno.
 
 ## Requirements
@@ -19,7 +17,7 @@ Carol is a deno module to build desktop applications using Deno, HTML, and Googl
 **hello.ts**
 
 ```typescript
-import { launch } from "https://deno.land/x/carol@v0.2.0/mod.ts";
+import { launch } from "https://deno.land/x/carol@v1.0.0/mod.ts";
 import { dirname, join } from "https://deno.land/std@0.82.0/path/mod.ts";
 
 const app = await launch({
