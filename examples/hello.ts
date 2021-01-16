@@ -18,5 +18,7 @@ if (import.meta.url.startsWith("file://")) {
 } else {
   const url = new URL(import.meta.url);
   app.serveOrigin(url.origin);
+  console.log(url.origin);
+  console.log(join(dirname(url.pathname), "index.html"));
   await app.load(join(dirname(url.pathname), "index.html"));
 }
