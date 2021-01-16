@@ -96,7 +96,6 @@ function prepareChromeArgs(
   if (userDataDir) {
     chromeArguments.push(`--user-data-dir=${resolve(userDataDir)}`);
   } else {
-    const __dirname = dirname(fromFileUrl(import.meta.url));
     const localDataDir = options.localDataDir || getLocalDataDir();
     chromeArguments.push(`--user-data-dir=${localDataDir}`);
   }
