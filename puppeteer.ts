@@ -97,7 +97,7 @@ function prepareChromeArgs(
     chromeArguments.push(`--user-data-dir=${resolve(userDataDir)}`);
   } else {
     const __dirname = dirname(fromFileUrl(import.meta.url));
-    const localDataDir = options.localDataDir || join(__dirname, ".local-data");
+    const localDataDir = options.localDataDir || getLocalDataDir();
     chromeArguments.push(`--user-data-dir=${localDataDir}`);
   }
   if (headless) {
@@ -126,4 +126,12 @@ async function waitForWSEndpoint(r: Deno.Reader): Promise<string> {
       return match[1];
     }
   }
+}
+
+export function getLocalDataDir(): string {
+  const __dirname = import.meta.url.startsWith("file://")
+    ? dirname(fromFileUrl(import.meta.url))
+    : Deno.cwd();
+  const localDataDir = join(__dirname, ".local-data");
+  return localDataDir;
 }

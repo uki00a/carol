@@ -30,7 +30,7 @@ import {
   join,
 } from "./deps.ts";
 import type { Browser, CDPSession, Page, Target } from "./deps.ts";
-import { launch as launchPuppeteer } from "./puppeteer.ts";
+import { getLocalDataDir, launch as launchPuppeteer } from "./puppeteer.ts";
 import { createLogger } from "./logger.ts";
 import type * as types from "./types.ts";
 import { locateChrome } from "./locate.ts";
@@ -42,10 +42,6 @@ import { BASE64_ENCODED_RPC_CLIENT_SOURCE } from "./rpc.client.ts";
 import type { HandleProxy } from "./rpc/mod.ts";
 import { features } from "./features/mod.js";
 import type * as Messages from "./rpc/messages.ts";
-
-const __dirname = import.meta.url.startsWith("file://")
-  ? dirname(fromFileUrl(import.meta.url))
-  : Deno.cwd();
 
 let testMode = false;
 
@@ -765,7 +761,7 @@ export async function launch(
   if (!options.bgcolor) {
     options.bgcolor = "#ffffff";
   }
-  options.localDataDir = options.localDataDir || join(__dirname, ".local-data");
+  options.localDataDir = options.localDataDir || getLocalDataDir();
 
   const executablePath = options.executablePath ?? await locateChrome();
   if (!executablePath) {
