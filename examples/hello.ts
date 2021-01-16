@@ -1,5 +1,5 @@
 import { launch } from "../mod.ts";
-import { dirname, fromFileUrl } from "../deps.ts";
+import { dirname, fromFileUrl, join } from "../deps.ts";
 
 const app = await launch({
   title: "Hello carol",
@@ -10,6 +10,13 @@ const app = await launch({
 app.onExit().then(() => Deno.exit(0));
 
 await app.exposeFunction("greet", (name: string) => `Hello, ${name}!`);
-const folder = dirname(fromFileUrl(import.meta.url));
-app.serveFolder(folder);
-await app.load(`index.html`);
+
+if (import.meta.url.startsWith("file://")) {
+  const folder = dirname(fromFileUrl(import.meta.url));
+  app.serveFolder(folder);
+  await app.load("index.html");
+} else {
+  const url = new URL(import.meta.url);
+  app.serveOrigin(url.origin);
+  await app.load(join(dirname(url.pathname), "index.html"));
+}

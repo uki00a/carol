@@ -16,17 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  BufReader,
-  decode,
-  dirname,
-  fromFileUrl,
-  join,
-  puppeteer,
-  resolve,
-} from "./deps.ts";
+import { BufReader, decode, puppeteer, resolve } from "./deps.ts";
 import type { Browser, Target } from "./deps.ts";
 import type { AppOptions } from "./types.ts";
+import { getLocalDataDir } from "./util.ts";
 
 interface LaunchResult {
   browser: Browser;
@@ -96,8 +89,7 @@ function prepareChromeArgs(
   if (userDataDir) {
     chromeArguments.push(`--user-data-dir=${resolve(userDataDir)}`);
   } else {
-    const __dirname = dirname(fromFileUrl(import.meta.url));
-    const localDataDir = options.localDataDir || join(__dirname, ".local-data");
+    const localDataDir = options.localDataDir || getLocalDataDir();
     chromeArguments.push(`--user-data-dir=${localDataDir}`);
   }
   if (headless) {

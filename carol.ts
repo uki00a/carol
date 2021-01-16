@@ -22,15 +22,14 @@ import {
   decode,
   decodeFromBase64,
   deferred,
-  dirname,
   encodeToBase64,
   EventEmitter,
   exists,
-  fromFileUrl,
   join,
 } from "./deps.ts";
 import type { Browser, CDPSession, Page, Target } from "./deps.ts";
 import { launch as launchPuppeteer } from "./puppeteer.ts";
+import { getLocalDataDir } from "./util.ts";
 import { createLogger } from "./logger.ts";
 import type * as types from "./types.ts";
 import { locateChrome } from "./locate.ts";
@@ -42,8 +41,6 @@ import { BASE64_ENCODED_RPC_CLIENT_SOURCE } from "./rpc.client.ts";
 import type { HandleProxy } from "./rpc/mod.ts";
 import { features } from "./features/mod.js";
 import type * as Messages from "./rpc/messages.ts";
-
-const __dirname = dirname(fromFileUrl(import.meta.url));
 
 let testMode = false;
 
@@ -763,7 +760,7 @@ export async function launch(
   if (!options.bgcolor) {
     options.bgcolor = "#ffffff";
   }
-  options.localDataDir = options.localDataDir || join(__dirname, ".local-data");
+  options.localDataDir = options.localDataDir || getLocalDataDir();
 
   const executablePath = options.executablePath ?? await locateChrome();
   if (!executablePath) {
