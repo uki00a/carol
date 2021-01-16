@@ -1,7 +1,8 @@
 <html>
 <body>
-  <script src="index.js">
-  </script>
   <div>Hello, Deno!</div>
+  <script>
+    window.onload = async () => window.alert(await window.greet("Deno"));
+  </script>
 </body>
 </html>
