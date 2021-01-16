@@ -43,7 +43,9 @@ import type { HandleProxy } from "./rpc/mod.ts";
 import { features } from "./features/mod.js";
 import type * as Messages from "./rpc/messages.ts";
 
-const __dirname = dirname(fromFileUrl(import.meta.url));
+const __dirname = import.meta.url.startsWith("file://")
+  ? dirname(fromFileUrl(import.meta.url))
+  : Deno.cwd();
 
 let testMode = false;
 
