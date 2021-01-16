@@ -16,17 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  BufReader,
-  decode,
-  dirname,
-  fromFileUrl,
-  join,
-  puppeteer,
-  resolve,
-} from "./deps.ts";
+import { BufReader, decode, puppeteer, resolve } from "./deps.ts";
 import type { Browser, Target } from "./deps.ts";
 import type { AppOptions } from "./types.ts";
+import { getLocalDataDir } from "./util.ts";
 
 interface LaunchResult {
   browser: Browser;
@@ -125,12 +118,4 @@ async function waitForWSEndpoint(r: Deno.Reader): Promise<string> {
       return match[1];
     }
   }
-}
-
-export function getLocalDataDir(): string {
-  const __dirname = import.meta.url.startsWith("file://")
-    ? dirname(fromFileUrl(import.meta.url))
-    : Deno.cwd();
-  const localDataDir = join(__dirname, ".local-data");
-  return localDataDir;
 }

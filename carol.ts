@@ -22,15 +22,14 @@ import {
   decode,
   decodeFromBase64,
   deferred,
-  dirname,
   encodeToBase64,
   EventEmitter,
   exists,
-  fromFileUrl,
   join,
 } from "./deps.ts";
 import type { Browser, CDPSession, Page, Target } from "./deps.ts";
-import { getLocalDataDir, launch as launchPuppeteer } from "./puppeteer.ts";
+import { launch as launchPuppeteer } from "./puppeteer.ts";
+import { getLocalDataDir } from "./util.ts";
 import { createLogger } from "./logger.ts";
 import type * as types from "./types.ts";
 import { locateChrome } from "./locate.ts";
