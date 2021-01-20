@@ -1,7 +1,7 @@
 .PHONY: test lint example rpc_client
 
 lint:
-	deno fmt --check
+	deno fmt --check --ignore=LICENSE.md
 	deno lint --unstable
 
 test:
