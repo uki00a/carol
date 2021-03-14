@@ -24,10 +24,10 @@ jobs:
       if: matrix.os == 'windows-latest'
       uses: crazy-max/ghaction-chocolatey@v1
       with:
-        args: "install googlechrome"
+        args: "install googlechrome -Version 87.0.4280.141"
     - uses: denolib/setup-deno@master
       with:
-        deno-version: 1.7.0
+        deno-version: 1.8.1
     - name: Run linter
       if: matrix.os == 'ubuntu-latest'
       run: |
@@ -39,7 +39,7 @@ jobs:
         git diff --exit-code
     - name: Check mod.ts
       run: |
-        deno run mod.ts
+        deno cache mod.ts
     - name: Run tests
       run: |
         make test

@@ -19,7 +19,7 @@ Google Chrome. This module is a port of
 **hello.ts**
 
 ```typescript
-import { launch } from "https://deno.land/x/carol@v1.0.1/mod.ts";
+import { launch } from "https://deno.land/x/carol/mod.ts";
 import {
   dirname,
   fromFileUrl,
