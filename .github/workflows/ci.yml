@@ -27,7 +27,7 @@ jobs:
         args: "install googlechrome"
     - uses: denolib/setup-deno@master
       with:
-        deno-version: 1.7.0
+        deno-version: 1.8.1
     - name: Run linter
       if: matrix.os == 'ubuntu-latest'
       run: |
