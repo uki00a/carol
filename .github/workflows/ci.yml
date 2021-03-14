@@ -39,7 +39,7 @@ jobs:
         git diff --exit-code
     - name: Check mod.ts
       run: |
-        deno run mod.ts
+        deno cache mod.ts
     - name: Run tests
       run: |
         make test
