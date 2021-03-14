@@ -7,7 +7,8 @@ export {
 } from "https://deno.land/std@0.90.0/path/mod.ts";
 export { BufReader } from "https://deno.land/std@0.90.0/io/bufio.ts";
 export { concat } from "https://deno.land/std@0.90.0/bytes/mod.ts";
-export { decode, encode } from "https://deno.land/std@0.90.0/encoding/utf8.ts";
+// TODO: Remove this import statement.
+export { decode, encode } from "https://deno.land/std@0.84.0/encoding/utf8.ts";
 export {
   decode as decodeFromBase64,
   encode as encodeToBase64,
