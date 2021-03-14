@@ -1,3 +1,4 @@
+// deno-lint-ignore-file
 /**
  * Adopted from https://github.com/GoogleChromeLabs/carlo/blob/8f2cbfedf381818792017fe53651fe07f270bb96/lib/features/shortcuts.js
  * which is licensed as follows:
