@@ -5,6 +5,8 @@ import {
   encodeToBase64,
   fromFileUrl,
   join,
+  readAll,
+  writeAll,
 } from "../deps.ts";
 // @deno-types="https://unpkg.com/typescript@4.0.3/lib/typescript.d.ts"
 import { default as ts } from "https://jspm.dev/typescript@4.0.3/lib/typescript.js";
@@ -44,9 +46,9 @@ async function formatSource(source: string): Promise<string> {
     stdin: "piped",
     stdout: "piped",
   });
-  await Deno.writeAll(deno.stdin, encode(source));
+  await writeAll(deno.stdin, encode(source));
   deno.stdin.close();
-  const formattedSource = await Deno.readAll(deno.stdout);
+  const formattedSource = await readAll(deno.stdout);
   deno.stdout.close();
   deno.close();
   return decode(formattedSource);

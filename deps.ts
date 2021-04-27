@@ -15,6 +15,9 @@ export {
 } from "https://deno.land/std@0.95.0/encoding/base64.ts";
 export { deferred } from "https://deno.land/std@0.95.0/async/deferred.ts";
 export type { Deferred } from "https://deno.land/std@0.95.0/async/deferred.ts";
+
+export { readAll, writeAll } from "https://deno.land/std@0.95.0/io/util.ts";
+
 export {
   assert,
   assertEquals,
