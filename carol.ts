@@ -446,7 +446,7 @@ class Window extends EventEmitter implements types.Window {
       { timeout: 0, waitFor: "domcontentloaded" },
     );
     // Available in Chrome M73+.
-    this.session_.send("Page.resetNavigationHistory").catch((e) => {});
+    this.session_.send("Page.resetNavigationHistory").catch((_e) => {});
     // Make sure domContentLoaded callback is processed before we return.
     // That indirection is here to handle debug-related reloads we did not call for.
     return result;
@@ -495,6 +495,7 @@ class Window extends EventEmitter implements types.Window {
     await this.page_.evaluateOnNewDocument(
       (rpcFile: string, features: string[]) => {
         const module = { exports: {} as { default: RPC } };
+        // deno-lint-ignore no-unused-vars
         const exports = module.exports;
         eval(rpcFile);
         (self as ExtendedSelf).rpc = module.exports.default;
