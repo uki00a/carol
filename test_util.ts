@@ -16,26 +16,10 @@ export function testApp(
     const app = await launch(options);
     try {
       await fn(app);
-      await delayWhenRunningInCI();
     } finally {
       await app.exit();
     }
   });
-}
-
-// FIXME: Tests are flaky on CI. As a workaround, We put a short delay.
-export async function delayWhenRunningInCI(): Promise<void> {
-  if (Deno.env.get("CI")) {
-    await delay(5000);
-  }
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise<void>((resolve, _) =>
-    setTimeout(() => {
-      resolve();
-    }, ms)
-  );
 }
 
 export function test(name: string, fn: () => Promise<void>): void {

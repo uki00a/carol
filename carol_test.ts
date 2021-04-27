@@ -54,7 +54,6 @@ import {
   join,
 } from "./deps.ts";
 import {
-  delayWhenRunningInCI,
   startFileServer,
   test,
   testApp,
@@ -177,7 +176,6 @@ test("Application#onExit", async () => {
     called = true;
   });
 
-  await delayWhenRunningInCI();
   await app.exit();
 
   assert(called);
