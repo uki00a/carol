@@ -4,6 +4,7 @@
 ![https://img.shields.io/github/tag/uki00a/carol.svg](https://img.shields.io/github/tag/uki00a/carol.svg)
 [![license](https://img.shields.io/github/license/uki00a/carol.svg)](https://github.com/uki00a/carol)
 [![deno doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https/deno.land/x/carol/mod.ts)
+[![nest badge](https://nest.land/badge.svg)](https://nest.land/package/carol)
 
 Carol is a deno module to build desktop applications using Deno, HTML, and
 Google Chrome. This module is a port of
