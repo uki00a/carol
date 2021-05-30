@@ -1,7 +1,7 @@
 /**
  * This file contains parts adopted from https://github.com/puppeteer/puppeteer/blob/v5.5.0/src/node/Launcher.ts
  * which is licensed as follows:
- * 
+ *
  * Copyright 2017 Google Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
