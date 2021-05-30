@@ -2,7 +2,7 @@
 
 lint:
 	deno fmt --check --ignore=LICENSE.md
-	deno lint --unstable
+	deno lint
 
 test:
 	RUST_BACKTRACE=1 deno test --allow-env --allow-read --allow-write --allow-run --allow-net
