@@ -1,7 +1,7 @@
 /**
  * Adopted from https://github.com/GoogleChromeLabs/carlo/blob/8f2cbfedf381818792017fe53651fe07f270bb96/rpc/rpc.js
  * which is licensed as follows:
- * 
+ *
  * Copyright 2018 Google Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');

@@ -1,22 +1,22 @@
-export { exists } from "https://deno.land/std@0.95.0/fs/exists.ts";
+export { exists } from "https://deno.land/std@0.97.0/fs/exists.ts";
 export {
   dirname,
   fromFileUrl,
   join,
   resolve,
-} from "https://deno.land/std@0.95.0/path/mod.ts";
-export { BufReader } from "https://deno.land/std@0.95.0/io/bufio.ts";
-export { concat } from "https://deno.land/std@0.95.0/bytes/mod.ts";
+} from "https://deno.land/std@0.97.0/path/mod.ts";
+export { BufReader } from "https://deno.land/std@0.97.0/io/bufio.ts";
+export { concat } from "https://deno.land/std@0.97.0/bytes/mod.ts";
 // TODO: Remove this import statement.
 export { decode, encode } from "https://deno.land/std@0.84.0/encoding/utf8.ts";
 export {
   decode as decodeFromBase64,
   encode as encodeToBase64,
-} from "https://deno.land/std@0.95.0/encoding/base64.ts";
-export { deferred } from "https://deno.land/std@0.95.0/async/deferred.ts";
-export type { Deferred } from "https://deno.land/std@0.95.0/async/deferred.ts";
+} from "https://deno.land/std@0.97.0/encoding/base64.ts";
+export { deferred } from "https://deno.land/std@0.97.0/async/deferred.ts";
+export type { Deferred } from "https://deno.land/std@0.97.0/async/deferred.ts";
 
-export { readAll, writeAll } from "https://deno.land/std@0.95.0/io/util.ts";
+export { readAll, writeAll } from "https://deno.land/std@0.97.0/io/util.ts";
 
 export {
   assert,
