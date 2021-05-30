@@ -4,7 +4,7 @@
   "entry": "./mod.ts",
   "description": "Build cross-platform desktop apps with Deno, HTML, and Chrome",
   "homepage": "https://github.com/uki00a",
-  "version": "v1.0.6",
+  "version": "v1.0.7",
   "files": [
     "./**/*.ts",
     "./**/*.js",
