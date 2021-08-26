@@ -41,5 +41,7 @@ jobs:
       run: |
         deno cache mod.ts
     - name: Run tests
+      env:
+        CAROL_DEBUG: true
       run: |
         make test
