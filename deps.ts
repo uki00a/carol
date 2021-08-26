@@ -27,7 +27,6 @@ export {
   fail,
 } from "https://deno.land/std@0.106.0/testing/asserts.ts";
 
-/* @deno-types="https://unpkg.com/puppeteer@5.5.0/lib/esm/puppeteer/web.d.ts" */
 export { default as puppeteer } from "https://unpkg.com/puppeteer@10.2.0/lib/esm/puppeteer/web.js";
 export { EventEmitter } from "https://unpkg.com/puppeteer@10.2.0/lib/esm/puppeteer/common/EventEmitter.js";
 
