@@ -249,12 +249,18 @@ testApp(
     const server = startFileServer(port);
     try {
       app.serveOrigin(`http://127.0.0.1:${port}`, "prefix");
+      console.log(["Before load", Deno.resources()]);
       await app.load("prefix/index.html");
+      console.log(["After load", Deno.resources()]);
       await waitForPageLoad(app);
+      console.log(["Before evaluation", Deno.resources()]);
       const result = await app.evaluate("document.body.textContent");
+      console.log(["After evaluation", Deno.resources()]);
       assertStringIncludes(result, "hello http");
     } finally {
+      console.log(["Before closing server", Deno.resources()]);
       await server.close();
+      console.log(["After closing server", Deno.resources()]);
     }
   },
   options,
