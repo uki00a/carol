@@ -163,6 +163,7 @@ class Application extends EventEmitter implements types.Application {
     await this.browser.close();
     this.done_.resolve();
     this.emit(Application.Events.Exit, null);
+    return this.done_;
   }
 
   onExit(): Promise<void> {
