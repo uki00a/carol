@@ -12,7 +12,7 @@ export { decode, encode } from "https://deno.land/std@0.84.0/encoding/utf8.ts";
 export {
   decode as decodeFromBase64,
   encode as encodeToBase64,
-} from "https://deno.land/std@0.97.0/encoding/base106.ts";
+} from "https://deno.land/std@0.97.0/encoding/base64.ts";
 export { deferred } from "https://deno.land/std@0.106.0/async/deferred.ts";
 export type { Deferred } from "https://deno.land/std@0.106.0/async/deferred.ts";
 
