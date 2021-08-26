@@ -1,4 +1,4 @@
-import { serve, serveFile } from "./test_deps.ts";
+import { serve } from "./test_deps.ts";
 import { join } from "./deps.ts";
 import { locateChrome } from "./locate.ts";
 import type { Application, AppOptions } from "./mod.ts";
