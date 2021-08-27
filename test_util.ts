@@ -1,4 +1,4 @@
-import { serve, serveFile } from "./test_deps.ts";
+import { serve } from "./test_deps.ts";
 import { join } from "./deps.ts";
 import { locateChrome } from "./locate.ts";
 import type { Application, AppOptions } from "./mod.ts";
@@ -66,7 +66,11 @@ export function startFileServer(port: number): FileServer {
   const server = serve({ port });
   const serverPromise = (async () => {
     for await (const req of server) {
-      await req.respond(await serveFile(req, join("testdata/http", req.url)));
+      const body = await Deno.readFile(join("testdata/http", req.url));
+      await req.respond({
+        status: 200,
+        body,
+      });
     }
   })();
   return {
