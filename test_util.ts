@@ -66,12 +66,17 @@ export function startFileServer(port: number): FileServer {
   const serverPromise = (async () => {
     for await (const conn of listener) {
       const httpConn = Deno.serveHttp(conn);
-      for await (const { request, respondWith } of httpConn) {
-        const url = new URL(request.url);
-        const body = await Deno.readFile(join("testdata/http", url.pathname));
-        const resp = new Response(body);
-        respondWith(resp);
+      const event = await httpConn.nextRequest();
+      if (event == null) {
+        conn.close();
+        break;
       }
+      const { request, respondWith } = event;
+      const url = new URL(request.url);
+      const body = await Deno.readFile(join("testdata/http", url.pathname));
+      const resp = new Response(body);
+      await respondWith(resp);
+      httpConn.close();
     }
   })();
   return {
