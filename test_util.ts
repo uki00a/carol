@@ -1,4 +1,3 @@
-import { serve } from "./test_deps.ts";
 import { join } from "./deps.ts";
 import { locateChrome } from "./locate.ts";
 import type { Application, AppOptions } from "./mod.ts";
@@ -63,19 +62,26 @@ interface FileServer {
 }
 
 export function startFileServer(port: number): FileServer {
-  const server = serve({ port });
+  const listener = Deno.listen({ port });
   const serverPromise = (async () => {
-    for await (const req of server) {
-      const body = await Deno.readFile(join("testdata/http", req.url));
-      await req.respond({
-        status: 200,
-        body,
-      });
+    for await (const conn of listener) {
+      const httpConn = Deno.serveHttp(conn);
+      const event = await httpConn.nextRequest();
+      if (event == null) {
+        conn.close();
+        break;
+      }
+      const { request, respondWith } = event;
+      const url = new URL(request.url);
+      const body = await Deno.readFile(join("testdata/http", url.pathname));
+      const resp = new Response(body);
+      await respondWith(resp);
+      httpConn.close();
     }
   })();
   return {
     async close() {
-      server.close();
+      listener.close();
       await serverPromise;
     },
   };
