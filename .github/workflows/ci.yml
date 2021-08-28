@@ -32,7 +32,7 @@ jobs:
       run: |
         deno cache mod.ts
     - name: Show chrome version
-      run:: chrome --version
+      run: chrome --version
     - name: Run tests
       run: |
         make test
