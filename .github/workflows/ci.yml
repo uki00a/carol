@@ -12,22 +12,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest] # [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]
     steps:
     - uses: actions/checkout@master
-    - name: Install Chrome using apt-get
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -yqq google-chrome-stable
-    - name: Install Chrome using chocolatey
-      if: matrix.os == 'windows-latest'
-      uses: crazy-max/ghaction-chocolatey@v1
-      with:
-        args: "install googlechrome -Version 87.0.4280.141"
     - uses: denoland/setup-deno@main
       with:
         deno-version: "1.13.2"
+    - uses: browser-actions/setup-chrome@latest
     - name: Run linter
       if: matrix.os == 'ubuntu-latest'
       run: |
@@ -40,6 +31,8 @@ jobs:
     - name: Check mod.ts
       run: |
         deno cache mod.ts
+    - name: Show chrome version
+      run: chrome --version
     - name: Run tests
       run: |
         make test
