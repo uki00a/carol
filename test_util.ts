@@ -64,12 +64,14 @@ interface FileServer {
 export function startFileServer(port: number): FileServer {
   const listener = Deno.listen({ port });
   const serverPromise = (async () => {
-    const conn = await listener.accept();
-    const httpConn = Deno.serveHttp(conn);
-    for await (const { request, respondWith } of httpConn) {
-      const body = await Deno.readFile(join("testdata/http", request.url));
-      const resp = new Response(body);
-      respondWith(resp);
+    for await (const conn of listener) {
+      const httpConn = Deno.serveHttp(conn);
+      for await (const { request, respondWith } of httpConn) {
+        const url = new URL(request.url);
+        const body = await Deno.readFile(join("testdata/http", url.pathname));
+        const resp = new Response(body);
+        respondWith(resp);
+      }
     }
   })();
   return {
