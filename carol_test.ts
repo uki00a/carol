@@ -53,11 +53,7 @@ import {
   fromFileUrl,
   join,
 } from "./deps.ts";
-import {
-  startFileServer,
-  test,
-  testApp,
-} from "./test_util.ts";
+import { startFileServer, test, testApp } from "./test_util.ts";
 import { EvaluateError, launch } from "./mod.ts";
 import type { Application } from "./mod.ts";
 
