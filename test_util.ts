@@ -21,14 +21,6 @@ export function testApp(
   });
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise<void>((resolve, _) =>
-    setTimeout(() => {
-      resolve();
-    }, ms)
-  );
-}
-
 export function test(name: string, fn: () => Promise<void>): void {
   Deno.test({
     ignore: chromeDoesNotExist,
