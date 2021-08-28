@@ -5,7 +5,7 @@ lint:
 	deno lint
 
 test:
-	RUST_BACKTRACE=1 deno test --allow-env --allow-read --allow-write --allow-run --allow-net
+	RUST_BACKTRACE=1 deno test --allow-env --allow-read --allow-write --allow-run --allow-net --doc --import-map=import_map.test.json
 
 example:
 	deno run --allow-env --allow-read --allow-write --allow-run --allow-net examples/hello.ts

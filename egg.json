@@ -14,9 +14,9 @@
     ".github",
     ".vscode",
     "Makefile",
-    "examples",
     "testdata",
-    "tools"
+    "tools",
+    "import_map.test.json"
   ],
   "checkFormat": false,
   "checkTests": false,
