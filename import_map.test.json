@@ -1,6 +1,6 @@
 {
   "imports": {
     "https://deno.land/x/carol/mod.ts": "./mod.ts",
-    "https://deno.land/std/path/mod.ts": "https://deno.land/std@0.106.0/path/mod.ts"
+    "https://deno.land/std/path/mod.ts": "https://deno.land/std@0.107.0/path/mod.ts"
   }
 }
