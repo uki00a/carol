@@ -9,7 +9,7 @@ import {
   writeAll,
 } from "../deps.ts";
 // @deno-types="https://unpkg.com/typescript@4.0.3/lib/typescript.d.ts"
-import { default as ts } from "https://jspm.dev/typescript@4.0.3/lib/typescript.js";
+import { default as ts } from "https://esm.sh/typescript@4.0.3/lib/typescript.js";
 
 async function transpileRpcModule(rootDir: string): Promise<string> {
   const source = await Deno.readTextFile(join(rootDir, "rpc/rpc.ts"));
