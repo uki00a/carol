@@ -41,6 +41,7 @@ class ExtendedBrowserWebSocketTransport extends BrowserWebSocketTransport {
   }
 
   close(): void {
+    // Workaround for the panic that occurs in CI...
     if (this.#ws.readyState === this.#ws.OPEN) {
       super.close();
     }

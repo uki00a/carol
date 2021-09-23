@@ -29,10 +29,6 @@ export function test(name: string, fn: () => Promise<void>): void {
       try {
         await fn();
       } finally {
-        // FIXME: Workaround for flaky tests...
-        if (Deno.env.get("CI")) {
-          await new Promise((resolve) => setTimeout(resolve, 5000));
-        }
         cleanupResources();
       }
     },
