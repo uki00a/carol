@@ -1,6 +1,7 @@
 import { join } from "./deps.ts";
 import { locateChrome } from "./locate.ts";
 import type { Application, AppOptions } from "./mod.ts";
+import { tryClose } from "./util.ts";
 import { launch } from "./mod.ts";
 
 const chromeExecutable = await locateChrome();
@@ -38,7 +39,13 @@ export function test(name: string, fn: () => Promise<void>): void {
         const resources = Deno.resources() as Record<string, string>;
         for (const rid of Object.keys(resources)) {
           if (resources[rid] === "webSocketStream") {
-            Deno.close(Number(rid));
+            try {
+              Deno.close(Number(rid));
+            } catch (error) {
+              if (!(error instanceof Deno.errors.BadResource)) {
+                throw error;
+              }
+            }
           }
         }
       }
