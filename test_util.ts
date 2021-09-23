@@ -29,17 +29,17 @@ export function test(name: string, fn: () => Promise<void>): void {
       try {
         await fn();
       } finally {
+        // FIXME: Workaround for flaky tests...
+        if (Deno.env.get("CI") && Deno.build.os === "linux") {
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+        }
+
         // FIXME `WebSocket#close seems not to remove a resource from ResourceTable...`
         const resources = Deno.resources() as Record<string, string>;
         for (const rid of Object.keys(resources)) {
           if (resources[rid] === "webSocketStream") {
             Deno.close(Number(rid));
           }
-        }
-
-        // FIXME: Workaround for flaky tests...
-        if (Deno.env.get("CI") && Deno.build.os === "linux") {
-          await new Promise((resolve) => setTimeout(resolve, 5000));
         }
       }
     },
