@@ -29,16 +29,30 @@ export function test(name: string, fn: () => Promise<void>): void {
       try {
         await fn();
       } finally {
-        // FIXME `WebSocket#close seems not to remove a resource from ResourceTable...`
-        const resources = Deno.resources() as Record<string, string>;
-        for (const rid of Object.keys(resources)) {
-          if (resources[rid] === "webSocketStream") {
-            Deno.close(Number(rid));
-          }
+        // FIXME: Workaround for flaky tests...
+        if (Deno.env.get("CI")) {
+          await new Promise((resolve) => setTimeout(resolve, 5000));
         }
+        cleanupResources();
       }
     },
   });
+}
+
+function cleanupResources(): void {
+  // FIXME `WebSocket#close seems not to remove a resource from ResourceTable...`
+  const resources = Deno.resources() as Record<string, string>;
+  for (const rid of Object.keys(resources)) {
+    if (resources[rid] === "webSocketStream") {
+      try {
+        Deno.close(Number(rid));
+      } catch (error) {
+        if (!(error instanceof Deno.errors.BadResource)) {
+          throw error;
+        }
+      }
+    }
+  }
 }
 
 interface FileServer {

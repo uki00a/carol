@@ -29,7 +29,7 @@ import {
 } from "./deps.ts";
 import type { Browser, CDPSession, Page, Target } from "./deps.ts";
 import { launch as launchPuppeteer } from "./puppeteer.ts";
-import { getLocalDataDir } from "./util.ts";
+import { getLocalDataDir, tryClose } from "./util.ts";
 import { createLogger } from "./logger.ts";
 import type * as types from "./types.ts";
 import { locateChrome } from "./locate.ts";
@@ -153,14 +153,14 @@ class Application extends EventEmitter implements types.Application {
       return;
     }
     this.exited_ = true;
+    await this.browser.close();
     if (this.chromeProcess.stdout) {
-      this.chromeProcess.stdout.close();
+      tryClose(this.chromeProcess.stdout);
     }
     if (this.chromeProcess.stderr) {
-      this.chromeProcess.stderr.close();
+      tryClose(this.chromeProcess.stderr);
     }
-    this.chromeProcess.close();
-    await this.browser.close();
+    tryClose(this.chromeProcess);
     this.done_.resolve();
     this.emit(Application.Events.Exit, null);
     return this.done_;

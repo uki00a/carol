@@ -32,6 +32,21 @@ interface LaunchResult {
   chromeProcess: Deno.Process;
 }
 
+class ExtendedBrowserWebSocketTransport extends BrowserWebSocketTransport {
+  #ws: WebSocket;
+
+  constructor(ws: WebSocket) {
+    super(ws);
+    this.#ws = ws;
+  }
+
+  close(): void {
+    if (this.#ws.readyState === this.#ws.OPEN) {
+      super.close();
+    }
+  }
+}
+
 export async function launch(
   executablePath: string,
   headless: boolean,
@@ -43,7 +58,7 @@ export async function launch(
     stderr: "piped",
   });
   const wsEndpoint = await waitForWSEndpoint(chromeProcess.stderr);
-  const transport = await BrowserWebSocketTransport.create(wsEndpoint);
+  const transport = await ExtendedBrowserWebSocketTransport.create(wsEndpoint);
   const browser = await puppeteer.connect({
     ignoreHTTPSErrors: true,
     transport,
