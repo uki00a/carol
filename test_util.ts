@@ -36,6 +36,11 @@ export function test(name: string, fn: () => Promise<void>): void {
             Deno.close(Number(rid));
           }
         }
+
+        // FIXME: Workaround for flaky tests...
+        if (Deno.env.get("CI") && Deno.build.os === "linux") {
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+        }
       }
     },
   });
