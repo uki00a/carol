@@ -29,6 +29,7 @@ export {
 
 export { default as puppeteer } from "https://unpkg.com/puppeteer@10.2.0/lib/esm/puppeteer/web.js";
 export { EventEmitter } from "https://unpkg.com/puppeteer@10.2.0/lib/esm/puppeteer/common/EventEmitter.js";
+export { BrowserWebSocketTransport } from "https://unpkg.com/puppeteer@10.2.0/lib/esm/puppeteer/common/BrowserWebSocketTransport.js";
 
 export type { Browser } from "https://unpkg.com/puppeteer@10.2.0/lib/esm/puppeteer/common/Browser.js";
 export type { Target } from "https://unpkg.com/puppeteer@10.2.0/lib/esm/puppeteer/common/Target.js";
