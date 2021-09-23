@@ -16,8 +16,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { BufReader, decode, puppeteer, resolve } from "./deps.ts";
-import type { Browser, BrowserWebSocketTransport, Target } from "./deps.ts";
+import {
+  BrowserWebSocketTransport,
+  BufReader,
+  decode,
+  puppeteer,
+  resolve,
+} from "./deps.ts";
+import type { Browser, Target } from "./deps.ts";
 import type { AppOptions } from "./types.ts";
 import { getLocalDataDir } from "./util.ts";
 
