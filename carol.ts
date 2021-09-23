@@ -153,6 +153,7 @@ class Application extends EventEmitter implements types.Application {
       return;
     }
     this.exited_ = true;
+    await this.browser.close();
     if (this.chromeProcess.stdout) {
       this.chromeProcess.stdout.close();
     }
@@ -160,7 +161,6 @@ class Application extends EventEmitter implements types.Application {
       this.chromeProcess.stderr.close();
     }
     this.chromeProcess.close();
-    await this.browser.close();
     this.done_.resolve();
     this.emit(Application.Events.Exit, null);
     return this.done_;
