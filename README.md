@@ -19,13 +19,9 @@ Google Chrome. This module is a port of
 
 **hello.ts**
 
-```typescript
+```ts
 import { launch } from "https://deno.land/x/carol/mod.ts";
-import {
-  dirname,
-  fromFileUrl,
-  join,
-} from "https://deno.land/std@0.82.0/path/mod.ts";
+import { dirname, fromFileUrl, join } from "https://deno.land/std/path/mod.ts";
 
 const app = await launch({
   title: "Hello Deno!",

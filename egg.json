@@ -4,7 +4,7 @@
   "entry": "./mod.ts",
   "description": "Build cross-platform desktop apps with Deno, HTML, and Chrome",
   "homepage": "https://github.com/uki00a",
-  "version": "v1.0.7",
+  "version": "v1.1.1",
   "files": [
     "./**/*.ts",
     "./**/*.js",
@@ -14,9 +14,9 @@
     ".github",
     ".vscode",
     "Makefile",
-    "examples",
     "testdata",
-    "tools"
+    "tools",
+    "import_map.test.json"
   ],
   "checkFormat": false,
   "checkTests": false,

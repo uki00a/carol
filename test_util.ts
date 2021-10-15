@@ -1,4 +1,3 @@
-import { serve } from "./test_deps.ts";
 import { join } from "./deps.ts";
 import { locateChrome } from "./locate.ts";
 import type { Application, AppOptions } from "./mod.ts";
@@ -16,26 +15,10 @@ export function testApp(
     const app = await launch(options);
     try {
       await fn(app);
-      await delayWhenRunningInCI();
     } finally {
       await app.exit();
     }
   });
-}
-
-// FIXME: Tests are flaky on CI. As a workaround, We put a short delay.
-export async function delayWhenRunningInCI(): Promise<void> {
-  if (Deno.env.get("CI")) {
-    await delay(5000);
-  }
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise<void>((resolve, _) =>
-    setTimeout(() => {
-      resolve();
-    }, ms)
-  );
 }
 
 export function test(name: string, fn: () => Promise<void>): void {
@@ -46,16 +29,30 @@ export function test(name: string, fn: () => Promise<void>): void {
       try {
         await fn();
       } finally {
-        // FIXME `WebSocket#close seems not to remove a resource from ResourceTable...`
-        const resources = Deno.resources() as Record<string, string>;
-        for (const rid of Object.keys(resources)) {
-          if (resources[rid] === "webSocketStream") {
-            Deno.close(Number(rid));
-          }
+        // FIXME: Workaround for flaky tests...
+        if (Deno.env.get("CI")) {
+          await new Promise((resolve) => setTimeout(resolve, 5000));
         }
+        cleanupResources();
       }
     },
   });
+}
+
+function cleanupResources(): void {
+  // FIXME `WebSocket#close seems not to remove a resource from ResourceTable...`
+  const resources = Deno.resources() as Record<string, string>;
+  for (const rid of Object.keys(resources)) {
+    if (resources[rid] === "webSocketStream") {
+      try {
+        Deno.close(Number(rid));
+      } catch (error) {
+        if (!(error instanceof Deno.errors.BadResource)) {
+          throw error;
+        }
+      }
+    }
+  }
 }
 
 interface FileServer {
@@ -63,19 +60,26 @@ interface FileServer {
 }
 
 export function startFileServer(port: number): FileServer {
-  const server = serve({ port });
+  const listener = Deno.listen({ port });
   const serverPromise = (async () => {
-    for await (const req of server) {
-      const body = await Deno.readFile(join("testdata/http", req.url));
-      await req.respond({
-        status: 200,
-        body,
-      });
+    for await (const conn of listener) {
+      const httpConn = Deno.serveHttp(conn);
+      const event = await httpConn.nextRequest();
+      if (event == null) {
+        conn.close();
+        break;
+      }
+      const { request, respondWith } = event;
+      const url = new URL(request.url);
+      const body = await Deno.readFile(join("testdata/http", url.pathname));
+      const resp = new Response(body);
+      await respondWith(resp);
+      httpConn.close();
     }
   })();
   return {
     async close() {
-      server.close();
+      listener.close();
       await serverPromise;
     },
   };
