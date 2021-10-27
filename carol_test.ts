@@ -183,7 +183,7 @@ test("Application#onExit - message", async () => {
     height: 320,
     args: ["--headless"],
   });
-  const exitMessage = 'my exit message';
+  const exitMessage = "my exit message";
 
   let called = false;
   app.onExit().then((message) => {
