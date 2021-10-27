@@ -147,7 +147,7 @@ class Application extends EventEmitter implements types.Application {
     return result;
   }
 
-  async exit(): Promise<void> {
+  async exit(message?: any): Promise<void> {
     this.logger_.debug("[app] app.exit...");
     if (this.exited_) {
       return;
@@ -161,12 +161,12 @@ class Application extends EventEmitter implements types.Application {
       tryClose(this.chromeProcess.stderr);
     }
     tryClose(this.chromeProcess);
-    this.done_.resolve();
-    this.emit(Application.Events.Exit, null);
+    this.done_.resolve(message);
+    this.emit(Application.Events.Exit, message);
     return this.done_;
   }
 
-  onExit(): Promise<void> {
+  onExit(): Promise<any> {
     return this.done_;
   }
 
