@@ -98,7 +98,7 @@ class Application extends EventEmitter implements types.Application {
   httpHandler_: types.HttpHandler | null = null;
   private readonly pendingWindows_ = new Map<string, PendingWindow>();
   private readonly windows_ = new Map<Page, Window>();
-  private readonly done_ = deferred<string|void>();
+  private readonly done_ = deferred<string | void>();
 
   constructor(
     private readonly browser: Browser,
@@ -147,7 +147,7 @@ class Application extends EventEmitter implements types.Application {
     return result;
   }
 
-  async exit(message?: string): Promise<string|void> {
+  async exit(message?: string): Promise<string | void> {
     this.logger_.debug("[app] app.exit...");
     if (this.exited_) {
       return;
@@ -166,7 +166,7 @@ class Application extends EventEmitter implements types.Application {
     return this.done_;
   }
 
-  onExit(): Promise<any> {
+  onExit(): Promise<string | void> {
     return this.done_;
   }
 
