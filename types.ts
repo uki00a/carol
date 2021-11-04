@@ -70,12 +70,12 @@ export interface Application {
   /**
    * Close the app windows.
    */
-  exit(): Promise<void>;
+  exit(message?: string): Promise<string | void>;
 
   /**
    * Returns the promise that will be resolved when the app is closed.
    */
-  onExit(): Promise<void>;
+  onExit(): Promise<string | void>;
 
   /**
    * @return main window.

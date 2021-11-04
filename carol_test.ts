@@ -177,6 +177,25 @@ test("Application#onExit", async () => {
   assert(called);
 });
 
+test("Application#onExit - message", async () => {
+  const app = await launch({
+    width: 480,
+    height: 320,
+    args: ["--headless"],
+  });
+  const exitMessage = "my exit message";
+
+  let called = false;
+  app.onExit().then((message) => {
+    called = true;
+    assertStrictEquals(message, exitMessage);
+  });
+
+  await app.exit(exitMessage);
+
+  assert(called);
+});
+
 testApp(
   "Application#serveFolder",
   async (app) => {
