@@ -282,5 +282,5 @@ test("custom executablePath", async () => {
       height: 320,
       args: ["--headless"],
     });
-  }, Deno.errors.PermissionDenied); // TODO Is this correct? (PermissionDenied)
+  }, Error);
 });
