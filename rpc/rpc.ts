@@ -82,7 +82,6 @@ type Object = Function | {
  */
 class Handle {
   proxy_: HandleProxy;
-  // deno-lint-ignore ban-types
   object_: Object | null = null;
 
   /**
@@ -301,7 +300,6 @@ class Rpc {
    * Creates a handle to the object.
    * @param object Object to create handle for
    */
-  // deno-lint-ignore ban-types
   handle(object: Object): HandleProxy {
     if (!object) {
       throw new Error("Can only create handles for objects");
@@ -326,7 +324,6 @@ class Rpc {
    *
    * @param handle Primary object handle.
    */
-  // deno-lint-ignore ban-types
   object(proxy: HandleProxy): Object | null {
     return proxy[handleSymbol].object_ || null;
   }
@@ -348,7 +345,6 @@ class Rpc {
   /**
    * Builds object descriptor.
    */
-  // deno-lint-ignore ban-types
   describe_(o: Object): Descriptor {
     if (typeof o === "function") {
       return { isFunc: true };
