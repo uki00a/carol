@@ -46,9 +46,9 @@
 import {
   assert,
   assertEquals,
+  assertRejects,
   assertStrictEquals,
   assertStringIncludes,
-  assertThrowsAsync,
   dirname,
   fromFileUrl,
   join,
@@ -84,7 +84,7 @@ testApp("Application#evaluate (part 1)", async (app) => {
   const res3 = await app.evaluate(`[1,2,3].map(n => n * 2)`);
   assertEquals(res3, [2, 4, 6]);
 
-  await assertThrowsAsync(() => app.evaluate(`throw fail`), EvaluateError);
+  await assertRejects(() => app.evaluate(`throw fail`), EvaluateError);
 }, options);
 
 testApp("Application#evaluate (part 2)", async (app) => {
@@ -131,7 +131,7 @@ testApp("Application#exposeFunction (part 1)", async (app) => {
   assertStrictEquals(typeof await app.evaluate(`rand()`), "number");
   assertStrictEquals(await app.evaluate(`strlen('foo')`), 3);
   assertStrictEquals(await app.evaluate(`atoi('123')`), 123);
-  await assertThrowsAsync(
+  await assertRejects(
     () => app.evaluate("shouldFail()"),
     EvaluateError,
     "hello",
@@ -149,12 +149,12 @@ testApp("Application#exposeFunction (part 2)", async (app) => {
   const res = await app.evaluate(`window.add(2, 3)`);
   assertStrictEquals(res, 5);
 
-  await assertThrowsAsync(
+  await assertRejects(
     () => app.evaluate(`window.add("foo", "bar")`),
     EvaluateError,
   );
 
-  await assertThrowsAsync(
+  await assertRejects(
     () => app.evaluate(`window.add(1, 2, 3)`),
     EvaluateError,
   );
@@ -275,7 +275,7 @@ testApp("Application#load", async (app) => {
 }, options);
 
 test("custom executablePath", async () => {
-  await assertThrowsAsync(async () => {
+  await assertRejects(async () => {
     await launch({
       executablePath: "/",
       width: 480,

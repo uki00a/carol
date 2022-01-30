@@ -21,9 +21,9 @@ export { readAll, writeAll } from "https://deno.land/std@0.122.0/io/util.ts";
 export {
   assert,
   assertEquals,
+  assertRejects,
   assertStrictEquals,
   assertStringIncludes,
-  assertThrowsAsync,
   fail,
 } from "https://deno.land/std@0.122.0/testing/asserts.ts";
 
