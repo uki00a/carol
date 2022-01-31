@@ -1,58 +1,31 @@
 import { join } from "./deps.ts";
 import { locateChrome } from "./locate.ts";
-import type { Application, AppOptions } from "./mod.ts";
-import { launch } from "./mod.ts";
 
 const chromeExecutable = await locateChrome();
 const chromeDoesNotExist = !chromeExecutable;
 
-export function testApp(
-  name: string,
-  fn: (app: Application) => Promise<void>,
-  options: AppOptions,
-): void {
-  test(name, async () => {
-    const app = await launch(options);
-    try {
-      await fn(app);
-    } finally {
-      await app.exit();
-    }
-  });
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function test(name: string, fn: () => Promise<void>): void {
+export function test(
+  name: string,
+  fn: (t: Deno.TestContext) => Promise<void>,
+): void {
   Deno.test({
     ignore: chromeDoesNotExist,
     name,
-    fn: async () => {
+    fn: async (t) => {
       try {
-        await fn();
+        await fn(t);
       } finally {
         // FIXME: Workaround for flaky tests...
         if (Deno.env.get("CI")) {
-          await new Promise((resolve) => setTimeout(resolve, 5000));
+          await sleep(5000);
         }
-        cleanupResources();
       }
     },
   });
-}
-
-function cleanupResources(): void {
-  // FIXME `WebSocket#close seems not to remove a resource from ResourceTable...`
-  const resources = Deno.resources() as Record<string, string>;
-  for (const rid of Object.keys(resources)) {
-    if (resources[rid] === "webSocketStream") {
-      try {
-        Deno.close(Number(rid));
-      } catch (error) {
-        if (!(error instanceof Deno.errors.BadResource)) {
-          throw error;
-        }
-      }
-    }
-  }
 }
 
 interface FileServer {
