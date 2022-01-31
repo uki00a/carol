@@ -125,51 +125,57 @@ test("Application#evaluate", async (t) => {
 });
 
 test("Application#exposeFunction", async (t) => {
-  const app = await launch(options);
-
   await t.step("part 1", async () => {
-    await app.exposeFunction("add", (a: number, b: number) => a + b);
-    await app.exposeFunction("rand", () => Math.random());
-    await app.exposeFunction("strlen", (s: string) => s.length);
-    await app.exposeFunction("atoi", (s: string) => parseInt(s));
-    await app.exposeFunction("shouldFail", () => {
-      throw "hello";
-    });
+    const app = await launch(options);
+    try {
+      await app.exposeFunction("add", (a: number, b: number) => a + b);
+      await app.exposeFunction("rand", () => Math.random());
+      await app.exposeFunction("strlen", (s: string) => s.length);
+      await app.exposeFunction("atoi", (s: string) => parseInt(s));
+      await app.exposeFunction("shouldFail", () => {
+        throw "hello";
+      });
 
-    assertStrictEquals(await app.evaluate(`add(2, 3)`), 5);
-    assertStrictEquals(typeof await app.evaluate(`rand()`), "number");
-    assertStrictEquals(await app.evaluate(`strlen('foo')`), 3);
-    assertStrictEquals(await app.evaluate(`atoi('123')`), 123);
-    await assertRejects(
-      () => app.evaluate("shouldFail()"),
-      EvaluateError,
-      "hello",
-    );
+      assertStrictEquals(await app.evaluate(`add(2, 3)`), 5);
+      assertStrictEquals(typeof await app.evaluate(`rand()`), "number");
+      assertStrictEquals(await app.evaluate(`strlen('foo')`), 3);
+      assertStrictEquals(await app.evaluate(`atoi('123')`), 123);
+      await assertRejects(
+        () => app.evaluate("shouldFail()"),
+        EvaluateError,
+        "hello",
+      );
+    } finally {
+      await app.exit();
+    }
   });
 
   await t.step("part 2", async () => {
-    await app.exposeFunction("add", (...args: unknown[]): number => {
-      assertStrictEquals(args.length, 2, "2 arguments expected");
-      assertStrictEquals(typeof args[0], "number");
-      assertStrictEquals(typeof args[1], "number");
-      const [a, b] = args as [number, number];
-      return a + b;
-    });
-    const res = await app.evaluate(`window.add(2, 3)`);
-    assertStrictEquals(res, 5);
+    const app = await launch(options);
+    try {
+      await app.exposeFunction("add", (...args: unknown[]): number => {
+        assertStrictEquals(args.length, 2, "2 arguments expected");
+        assertStrictEquals(typeof args[0], "number");
+        assertStrictEquals(typeof args[1], "number");
+        const [a, b] = args as [number, number];
+        return a + b;
+      });
+      const res = await app.evaluate(`window.add(2, 3)`);
+      assertStrictEquals(res, 5);
 
-    await assertRejects(
-      () => app.evaluate(`window.add("foo", "bar")`),
-      EvaluateError,
-    );
+      await assertRejects(
+        () => app.evaluate(`window.add("foo", "bar")`),
+        EvaluateError,
+      );
 
-    await assertRejects(
-      () => app.evaluate(`window.add(1, 2, 3)`),
-      EvaluateError,
-    );
+      await assertRejects(
+        () => app.evaluate(`window.add(1, 2, 3)`),
+        EvaluateError,
+      );
+    } finally {
+      await app.exit();
+    }
   });
-
-  await app.exit();
 });
 
 test("Application#onExit", async () => {
