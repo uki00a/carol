@@ -153,6 +153,10 @@ class Application extends EventEmitter implements types.Application {
       return;
     }
     this.exited_ = true;
+    this.browser.once("disconnected", () => {
+      this.done_.resolve();
+      this.emit(Application.Events.Exit, null);
+    });
     await this.browser.close();
     if (this.chromeProcess.stdout) {
       tryClose(this.chromeProcess.stdout);
@@ -161,8 +165,6 @@ class Application extends EventEmitter implements types.Application {
       tryClose(this.chromeProcess.stderr);
     }
     tryClose(this.chromeProcess);
-    this.done_.resolve();
-    this.emit(Application.Events.Exit, null);
     return this.done_;
   }
 
