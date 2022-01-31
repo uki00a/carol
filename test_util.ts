@@ -4,6 +4,10 @@ import { locateChrome } from "./locate.ts";
 const chromeExecutable = await locateChrome();
 const chromeDoesNotExist = !chromeExecutable;
 
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function test(
   name: string,
   fn: (t: Deno.TestContext) => Promise<void>,
@@ -17,28 +21,11 @@ export function test(
       } finally {
         // FIXME: Workaround for flaky tests...
         if (Deno.env.get("CI")) {
-          await new Promise((resolve) => setTimeout(resolve, 5000));
+          await sleep(5000);
         }
-        cleanupResources();
       }
     },
   });
-}
-
-function cleanupResources(): void {
-  // FIXME `WebSocket#close seems not to remove a resource from ResourceTable...`
-  const resources = Deno.resources() as Record<string, string>;
-  for (const rid of Object.keys(resources)) {
-    if (resources[rid] === "webSocketStream") {
-      try {
-        Deno.close(Number(rid));
-      } catch (error) {
-        if (!(error instanceof Deno.errors.BadResource)) {
-          throw error;
-        }
-      }
-    }
-  }
 }
 
 interface FileServer {

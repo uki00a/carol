@@ -53,7 +53,7 @@ import {
   fromFileUrl,
   join,
 } from "./deps.ts";
-import { startFileServer, test } from "./test_util.ts";
+import { sleep, startFileServer, test } from "./test_util.ts";
 import { EvaluateError, launch } from "./mod.ts";
 import type { Application } from "./mod.ts";
 
@@ -90,6 +90,8 @@ test("Application#evaluate", async (t) => {
       await assertRejects(() => app.evaluate(`throw fail`), EvaluateError);
     } finally {
       await app.exit();
+      // Waiting for websocket ops to complete...
+      await sleep(500); // FIXME: Remove this
     }
   });
 
@@ -126,6 +128,8 @@ test("Application#evaluate", async (t) => {
       }
     } finally {
       await app.exit();
+      // Waiting for websocket ops to complete...
+      await sleep(500); // FIXME: Remove this
     }
   });
 });
@@ -153,6 +157,8 @@ test("Application#exposeFunction", async (t) => {
       );
     } finally {
       await app.exit();
+      // Waiting for websocket ops to complete...
+      await sleep(500); // FIXME: Remove this
     }
   });
 
@@ -180,6 +186,8 @@ test("Application#exposeFunction", async (t) => {
       );
     } finally {
       await app.exit();
+      // Waiting for websocket ops to complete...
+      await sleep(500); // FIXME: Remove this
     }
   });
 });
