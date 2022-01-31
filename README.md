@@ -53,7 +53,8 @@ await app.load("index.html");
 Run `hello.ts` from the CLI:
 
 ```shell
-$ deno run --allow-env --allow-read --allow-write --allow-run --allow-net hello.ts
+# If you are using Windows, you additionally need `--allow-env`!
+$ deno run --allow-read --allow-write --allow-run --allow-net hello.ts
 ```
 
 ## Links

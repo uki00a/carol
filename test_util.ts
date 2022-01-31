@@ -12,8 +12,18 @@ export function test(
   name: string,
   fn: (t: Deno.TestContext) => Promise<void>,
 ): void {
+  const allowedEnvVars = Deno.build.os === "windows"
+    ? ["LocalAppData", "ProgramFiles", "ProgramFiles(x86)"]
+    : [];
   Deno.test({
     ignore: chromeDoesNotExist,
+    permissions: {
+      env: ["CI", ...allowedEnvVars],
+      read: true,
+      write: true,
+      run: [chromeExecutable],
+      net: true,
+    },
     name,
     fn: async (t) => {
       try {

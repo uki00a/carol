@@ -757,7 +757,7 @@ export async function launch(
   options_: types.AppOptions = {},
 ): Promise<types.Application> {
   const options = Object.assign(options_) as types.AppOptions;
-  const logger = options.logger ?? createLogger();
+  const logger = options.logger ?? await createLogger();
   logger.debug("[app] Launching Carlo", options_);
   if (!options.bgcolor) {
     options.bgcolor = "#ffffff";
