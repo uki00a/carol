@@ -6,8 +6,17 @@ const NullLogger = {
   debug: noop,
 } as Logger;
 
-export function createLogger(env = Deno.env): Logger {
-  const debug = env.get("CAROL_DEBUG");
+export async function createLogger(env = Deno.env): Promise<Logger> {
+  const carolDebugVar = "CAROL_DEBUG";
+  const status = await Deno.permissions.query({
+    name: "env",
+    variable: carolDebugVar,
+  });
+  if (status.state !== "granted") {
+    return NullLogger;
+  }
+
+  const debug = env.get(carolDebugVar);
   if (debug === "1" || debug === "true") {
     // TODO improve logging
     return console;
