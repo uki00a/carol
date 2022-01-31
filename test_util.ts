@@ -6,28 +6,16 @@ import { launch } from "./mod.ts";
 const chromeExecutable = await locateChrome();
 const chromeDoesNotExist = !chromeExecutable;
 
-export function testApp(
+export function test(
   name: string,
-  fn: (app: Application) => Promise<void>,
-  options: AppOptions,
+  fn: (t: Deno.TestContext) => Promise<void>,
 ): void {
-  test(name, async () => {
-    const app = await launch(options);
-    try {
-      await fn(app);
-    } finally {
-      await app.exit();
-    }
-  });
-}
-
-export function test(name: string, fn: () => Promise<void>): void {
   Deno.test({
     ignore: chromeDoesNotExist,
     name,
-    fn: async () => {
+    fn: async (t) => {
       try {
-        await fn();
+        await fn(t);
       } finally {
         // FIXME: Workaround for flaky tests...
         if (Deno.env.get("CI")) {
