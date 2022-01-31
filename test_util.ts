@@ -1,7 +1,5 @@
 import { join } from "./deps.ts";
 import { locateChrome } from "./locate.ts";
-import type { Application, AppOptions } from "./mod.ts";
-import { launch } from "./mod.ts";
 
 const chromeExecutable = await locateChrome();
 const chromeDoesNotExist = !chromeExecutable;
