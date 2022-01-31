@@ -14,6 +14,13 @@ export function test(
 ): void {
   Deno.test({
     ignore: chromeDoesNotExist,
+    permissions: {
+      env: ["CI"],
+      read: true,
+      write: true,
+      run: [chromeExecutable],
+      net: true,
+    },
     name,
     fn: async (t) => {
       try {
