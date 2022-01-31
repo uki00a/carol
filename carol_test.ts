@@ -75,53 +75,59 @@ const options = {
 };
 
 test("Application#evaluate", async (t) => {
-  const app = await launch(options);
-
   await t.step("part 1", async () => {
-    const res1 = await app.evaluate(`2+3`);
-    assertStrictEquals(res1, 5);
+    const app = await launch(options);
+    try {
+      const res1 = await app.evaluate(`2+3`);
+      assertStrictEquals(res1, 5);
 
-    const res2 = await app.evaluate(`"foo" + "bar"`);
-    assertStrictEquals(res2, "foobar");
+      const res2 = await app.evaluate(`"foo" + "bar"`);
+      assertStrictEquals(res2, "foobar");
 
-    const res3 = await app.evaluate(`[1,2,3].map(n => n * 2)`);
-    assertEquals(res3, [2, 4, 6]);
+      const res3 = await app.evaluate(`[1,2,3].map(n => n * 2)`);
+      assertEquals(res3, [2, 4, 6]);
 
-    await assertRejects(() => app.evaluate(`throw fail`), EvaluateError);
-  });
-
-  await t.step("part 2", async () => {
-    for (
-      const test of [
-        { expr: ``, result: undefined },
-        { expr: `42`, result: 42 },
-        { expr: `2+3`, result: 5 },
-        { expr: `(() => ({x: 5, y: 7}))()`, result: { "x": 5, "y": 7 } },
-        { expr: `(() => ([1,'foo',false]))()`, result: [1, "foo", false] },
-        { expr: `((a, b) => a*b)(3, 7)`, result: 21 },
-        { expr: `Promise.resolve(42)`, result: 42 },
-        { expr: `Promise.reject('foo')`, error: "foo" },
-        { expr: `throw "bar"`, error: "bar" },
-        { expr: `2+`, error: `SyntaxError: Unexpected end of input` },
-      ]
-    ) {
-      try {
-        const result = await app.evaluate(test.expr);
-        assertEquals(result, test.result);
-      } catch (error) {
-        if (test.error == null) {
-          throw error;
-        }
-        assertEquals(test.error, error.message);
-        assert(
-          error instanceof EvaluateError,
-          "The error should be instanceof EvaluateError",
-        );
-      }
+      await assertRejects(() => app.evaluate(`throw fail`), EvaluateError);
+    } finally {
+      await app.exit();
     }
   });
 
-  await app.exit();
+  await t.step("part 2", async () => {
+    const app = await launch(options);
+    try {
+      for (
+        const test of [
+          { expr: ``, result: undefined },
+          { expr: `42`, result: 42 },
+          { expr: `2+3`, result: 5 },
+          { expr: `(() => ({x: 5, y: 7}))()`, result: { "x": 5, "y": 7 } },
+          { expr: `(() => ([1,'foo',false]))()`, result: [1, "foo", false] },
+          { expr: `((a, b) => a*b)(3, 7)`, result: 21 },
+          { expr: `Promise.resolve(42)`, result: 42 },
+          { expr: `Promise.reject('foo')`, error: "foo" },
+          { expr: `throw "bar"`, error: "bar" },
+          { expr: `2+`, error: `SyntaxError: Unexpected end of input` },
+        ]
+      ) {
+        try {
+          const result = await app.evaluate(test.expr);
+          assertEquals(result, test.result);
+        } catch (error) {
+          if (test.error == null) {
+            throw error;
+          }
+          assertEquals(test.error, error.message);
+          assert(
+            error instanceof EvaluateError,
+            "The error should be instanceof EvaluateError",
+          );
+        }
+      }
+    } finally {
+      await app.exit();
+    }
+  });
 });
 
 test("Application#exposeFunction", async (t) => {
