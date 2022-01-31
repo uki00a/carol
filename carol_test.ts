@@ -53,7 +53,7 @@ import {
   fromFileUrl,
   join,
 } from "./deps.ts";
-import { startFileServer, test, testApp } from "./test_util.ts";
+import { sleep, startFileServer, test } from "./test_util.ts";
 import { EvaluateError, launch } from "./mod.ts";
 import type { Application } from "./mod.ts";
 
@@ -74,91 +74,123 @@ const options = {
   args: ["--headless"],
 };
 
-testApp("Application#evaluate (part 1)", async (app) => {
-  const res1 = await app.evaluate(`2+3`);
-  assertStrictEquals(res1, 5);
-
-  const res2 = await app.evaluate(`"foo" + "bar"`);
-  assertStrictEquals(res2, "foobar");
-
-  const res3 = await app.evaluate(`[1,2,3].map(n => n * 2)`);
-  assertEquals(res3, [2, 4, 6]);
-
-  await assertRejects(() => app.evaluate(`throw fail`), EvaluateError);
-}, options);
-
-testApp("Application#evaluate (part 2)", async (app) => {
-  for (
-    const test of [
-      { expr: ``, result: undefined },
-      { expr: `42`, result: 42 },
-      { expr: `2+3`, result: 5 },
-      { expr: `(() => ({x: 5, y: 7}))()`, result: { "x": 5, "y": 7 } },
-      { expr: `(() => ([1,'foo',false]))()`, result: [1, "foo", false] },
-      { expr: `((a, b) => a*b)(3, 7)`, result: 21 },
-      { expr: `Promise.resolve(42)`, result: 42 },
-      { expr: `Promise.reject('foo')`, error: "foo" },
-      { expr: `throw "bar"`, error: "bar" },
-      { expr: `2+`, error: `SyntaxError: Unexpected end of input` },
-    ]
-  ) {
+test("Application#evaluate", async (t) => {
+  await t.step("part 1", async () => {
+    const app = await launch(options);
     try {
-      const result = await app.evaluate(test.expr);
-      assertEquals(result, test.result);
-    } catch (error) {
-      if (test.error == null) {
-        throw error;
-      }
-      assertEquals(test.error, error.message);
-      assert(
-        error instanceof EvaluateError,
-        "The error should be instanceof EvaluateError",
-      );
+      const res1 = await app.evaluate(`2+3`);
+      assertStrictEquals(res1, 5);
+
+      const res2 = await app.evaluate(`"foo" + "bar"`);
+      assertStrictEquals(res2, "foobar");
+
+      const res3 = await app.evaluate(`[1,2,3].map(n => n * 2)`);
+      assertEquals(res3, [2, 4, 6]);
+
+      await assertRejects(() => app.evaluate(`throw fail`), EvaluateError);
+    } finally {
+      await app.exit();
+      // Waiting for websocket ops to complete...
+      await sleep(500); // FIXME: Remove this
     }
-  }
-}, options);
-
-testApp("Application#exposeFunction (part 1)", async (app) => {
-  await app.exposeFunction("add", (a: number, b: number) => a + b);
-  await app.exposeFunction("rand", () => Math.random());
-  await app.exposeFunction("strlen", (s: string) => s.length);
-  await app.exposeFunction("atoi", (s: string) => parseInt(s));
-  await app.exposeFunction("shouldFail", () => {
-    throw "hello";
   });
 
-  assertStrictEquals(await app.evaluate(`add(2, 3)`), 5);
-  assertStrictEquals(typeof await app.evaluate(`rand()`), "number");
-  assertStrictEquals(await app.evaluate(`strlen('foo')`), 3);
-  assertStrictEquals(await app.evaluate(`atoi('123')`), 123);
-  await assertRejects(
-    () => app.evaluate("shouldFail()"),
-    EvaluateError,
-    "hello",
-  );
-}, options);
-
-testApp("Application#exposeFunction (part 2)", async (app) => {
-  await app.exposeFunction("add", (...args: unknown[]): number => {
-    assertStrictEquals(args.length, 2, "2 arguments expected");
-    assertStrictEquals(typeof args[0], "number");
-    assertStrictEquals(typeof args[1], "number");
-    const [a, b] = args as [number, number];
-    return a + b;
+  await t.step("part 2", async () => {
+    const app = await launch(options);
+    try {
+      for (
+        const test of [
+          { expr: ``, result: undefined },
+          { expr: `42`, result: 42 },
+          { expr: `2+3`, result: 5 },
+          { expr: `(() => ({x: 5, y: 7}))()`, result: { "x": 5, "y": 7 } },
+          { expr: `(() => ([1,'foo',false]))()`, result: [1, "foo", false] },
+          { expr: `((a, b) => a*b)(3, 7)`, result: 21 },
+          { expr: `Promise.resolve(42)`, result: 42 },
+          { expr: `Promise.reject('foo')`, error: "foo" },
+          { expr: `throw "bar"`, error: "bar" },
+          { expr: `2+`, error: `SyntaxError: Unexpected end of input` },
+        ]
+      ) {
+        try {
+          const result = await app.evaluate(test.expr);
+          assertEquals(result, test.result);
+        } catch (error) {
+          if (test.error == null) {
+            throw error;
+          }
+          assertEquals(test.error, error.message);
+          assert(
+            error instanceof EvaluateError,
+            "The error should be instanceof EvaluateError",
+          );
+        }
+      }
+    } finally {
+      await app.exit();
+      // Waiting for websocket ops to complete...
+      await sleep(500); // FIXME: Remove this
+    }
   });
-  const res = await app.evaluate(`window.add(2, 3)`);
-  assertStrictEquals(res, 5);
+});
 
-  await assertRejects(
-    () => app.evaluate(`window.add("foo", "bar")`),
-    EvaluateError,
-  );
+test("Application#exposeFunction", async (t) => {
+  await t.step("part 1", async () => {
+    const app = await launch(options);
+    try {
+      await app.exposeFunction("add", (a: number, b: number) => a + b);
+      await app.exposeFunction("rand", () => Math.random());
+      await app.exposeFunction("strlen", (s: string) => s.length);
+      await app.exposeFunction("atoi", (s: string) => parseInt(s));
+      await app.exposeFunction("shouldFail", () => {
+        throw "hello";
+      });
 
-  await assertRejects(
-    () => app.evaluate(`window.add(1, 2, 3)`),
-    EvaluateError,
-  );
-}, options);
+      assertStrictEquals(await app.evaluate(`add(2, 3)`), 5);
+      assertStrictEquals(typeof await app.evaluate(`rand()`), "number");
+      assertStrictEquals(await app.evaluate(`strlen('foo')`), 3);
+      assertStrictEquals(await app.evaluate(`atoi('123')`), 123);
+      await assertRejects(
+        () => app.evaluate("shouldFail()"),
+        EvaluateError,
+        "hello",
+      );
+    } finally {
+      await app.exit();
+      // Waiting for websocket ops to complete...
+      await sleep(500); // FIXME: Remove this
+    }
+  });
+
+  await t.step("part 2", async () => {
+    const app = await launch(options);
+    try {
+      await app.exposeFunction("add", (...args: unknown[]): number => {
+        assertStrictEquals(args.length, 2, "2 arguments expected");
+        assertStrictEquals(typeof args[0], "number");
+        assertStrictEquals(typeof args[1], "number");
+        const [a, b] = args as [number, number];
+        return a + b;
+      });
+      const res = await app.evaluate(`window.add(2, 3)`);
+      assertStrictEquals(res, 5);
+
+      await assertRejects(
+        () => app.evaluate(`window.add("foo", "bar")`),
+        EvaluateError,
+      );
+
+      await assertRejects(
+        () => app.evaluate(`window.add(1, 2, 3)`),
+        EvaluateError,
+      );
+    } finally {
+      await app.exit();
+      // Waiting for websocket ops to complete...
+      await sleep(500); // FIXME: Remove this
+    }
+  });
+});
 
 test("Application#onExit", async () => {
   const app = await launch({
@@ -177,50 +209,59 @@ test("Application#onExit", async () => {
   assert(called);
 });
 
-testApp(
+test(
   "Application#serveFolder",
-  async (app) => {
-    const testdataFolder = join(
-      dirname(fromFileUrl(import.meta.url)),
-      "testdata",
-      "folder",
-    );
-    app.serveFolder(testdataFolder);
-    await app.load("index.html");
-    // Wait for page load
-    for (let i = 0; i < 10; i++) {
-      const url = await app.evaluate("window.location.href");
-      assertStrictEquals(typeof url, "string");
-      if (url.startsWith("http://")) {
-        break;
+  async () => {
+    const app = await launch(options);
+    try {
+      const testdataFolder = join(
+        dirname(fromFileUrl(import.meta.url)),
+        "testdata",
+        "folder",
+      );
+      app.serveFolder(testdataFolder);
+      await app.load("index.html");
+      // Wait for page load
+      for (let i = 0; i < 10; i++) {
+        const url = await app.evaluate("window.location.href");
+        assertStrictEquals(typeof url, "string");
+        if (url.startsWith("http://")) {
+          break;
+        }
       }
+      const result = await app.evaluate("document.body.textContent");
+      assertStrictEquals(result, "hello file");
+    } finally {
+      await app.exit();
     }
-    const result = await app.evaluate("document.body.textContent");
-    assertStrictEquals(result, "hello file");
   },
-  options,
 );
 
-testApp(
+test(
   "Application#serveFolder with prefix",
-  async (app) => {
-    const testdataFolder = join(
-      dirname(fromFileUrl(import.meta.url)),
-      "testdata",
-      "folder",
-    );
-    app.serveFolder(testdataFolder, "prefix");
-    await app.load("prefix/index.html");
-    await waitForPageLoad(app);
-    const result = await app.evaluate("document.body.textContent");
-    assertStrictEquals(result, "hello file");
+  async () => {
+    const app = await launch(options);
+    try {
+      const testdataFolder = join(
+        dirname(fromFileUrl(import.meta.url)),
+        "testdata",
+        "folder",
+      );
+      app.serveFolder(testdataFolder, "prefix");
+      await app.load("prefix/index.html");
+      await waitForPageLoad(app);
+      const result = await app.evaluate("document.body.textContent");
+      assertStrictEquals(result, "hello file");
+    } finally {
+      await app.exit();
+    }
   },
-  options,
 );
 
-testApp(
+test(
   "Application#serveOrigin works",
-  async (app) => {
+  async () => {
+    const app = await launch(options);
     const port = 3000;
     const server = startFileServer(port);
     try {
@@ -230,15 +271,16 @@ testApp(
       const result = await app.evaluate("document.body.textContent");
       assertStringIncludes(result, "hello http");
     } finally {
+      await app.exit();
       await server.close();
     }
   },
-  options,
 );
 
-testApp(
+test(
   "Application#serveOrigin: prefix is respected",
-  async (app) => {
+  async () => {
+    const app = await launch(options);
     const port = 3000;
     const server = startFileServer(port);
     try {
@@ -248,31 +290,36 @@ testApp(
       const result = await app.evaluate("document.body.textContent");
       assertStringIncludes(result, "hello http");
     } finally {
+      await app.exit();
       await server.close();
     }
   },
-  options,
 );
 
-testApp("Application#load", async (app) => {
-  await app.load("data:text/html,<html><body>Hello</body></html>");
+test("Application#load", async () => {
+  const app = await launch(options);
+  try {
+    await app.load("data:text/html,<html><body>Hello</body></html>");
 
-  // Wait for page load...
-  for (let i = 0; i < 10; i++) {
-    const url = await app.evaluate(`window.location.href`);
-    assertStrictEquals(typeof url, "string", "url must be string");
-    if (url.startsWith(`"data:text/html,`)) {
-      break;
+    // Wait for page load...
+    for (let i = 0; i < 10; i++) {
+      const url = await app.evaluate(`window.location.href`);
+      assertStrictEquals(typeof url, "string", "url must be string");
+      if (url.startsWith(`"data:text/html,`)) {
+        break;
+      }
     }
+
+    const res = await app.evaluate(
+      `document.body ? document.body.innerText :
+      new Promise(res => window.onload = () => res(document.body.innerText))`,
+    );
+
+    assertStrictEquals(res, "Hello");
+  } finally {
+    await app.exit();
   }
-
-  const res = await app.evaluate(
-    `document.body ? document.body.innerText :
-    new Promise(res => window.onload = () => res(document.body.innerText))`,
-  );
-
-  assertStrictEquals(res, "Hello");
-}, options);
+});
 
 test("custom executablePath", async () => {
   await assertRejects(async () => {
