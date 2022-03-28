@@ -1,0 +1,13 @@
+{
+  "fmt": {
+    "files": {
+      "exclude": [
+        "LICENSE.md"
+      ]
+    }
+  },
+  "tasks": {
+    "test": "RUST_BACKTRACE=1 deno test --allow-env --allow-read --allow-write --allow-run --allow-net --doc --import-map=import_map.test.json",
+    "gen_rpc_client": "deno run --allow-read --allow-write --allow-run --allow-net --allow-env --unstable ./tools/generate_rpc_client.ts"
+  }
+}
