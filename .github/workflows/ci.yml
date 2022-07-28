@@ -31,7 +31,7 @@ jobs:
         git diff --exit-code
     - name: Check mod.ts
       run: |
-        deno cache mod.ts
+        deno check mod.ts
     - name: Show chrome version
       run: chrome --version
     - name: Run tests
