@@ -30,9 +30,8 @@ export interface Response {
   r?: unknown;
 }
 
-export type Any = (
+export type Any =
   | CookiePayload
   | CookieResponse
   | Payload
-  | Response
-);
+  | Response;
