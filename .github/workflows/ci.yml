@@ -17,7 +17,7 @@ jobs:
     - uses: actions/checkout@master
     - uses: denoland/setup-deno@main
       with:
-        deno-version: "1.20.3"
+        deno-version: "1.24.0"
     - uses: browser-actions/setup-chrome@latest
     - name: Run linter
       if: matrix.os == 'ubuntu-latest'
