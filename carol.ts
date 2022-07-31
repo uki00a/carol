@@ -69,6 +69,14 @@ interface ExtendedSelf extends Self {
   receivedFromParent(message: Messages.Any): void;
 }
 
+// deno-lint-ignore no-explicit-any
+type PageFunctionArgs = any[];
+
+interface PageFunction {
+  // deno-lint-ignore no-explicit-any
+  (...args: PageFunctionArgs): any;
+}
+
 interface Carol {
   loadParams(): Promise<unknown>;
 }
@@ -222,8 +230,11 @@ class Application extends EventEmitter implements types.Application {
     );
   }
 
-  // deno-lint-ignore no-explicit-any, ban-types
-  evaluate(pageFunction: Function | string, ...args: unknown[]): Promise<any> {
+  // deno-lint-ignore no-explicit-any
+  evaluate(
+    pageFunction: PageFunction | string,
+    ...args: PageFunctionArgs
+  ): Promise<any> {
     return this.mainWindow().evaluate(pageFunction, ...args);
   }
 
@@ -322,7 +333,7 @@ class Window extends EventEmitter implements types.Window {
 
   private loadParams_!: unknown[];
   private domContentLoadedCallback_?: () => void;
-  private windowId_: unknown;
+  private windowId_!: number;
   private interceptionInitialized_ = false;
   private hostHandle_: HandleProxy;
   private receivedFromChild_!: (message: Messages.Any) => void;
@@ -352,7 +363,7 @@ class Window extends EventEmitter implements types.Window {
    */
   async init_(): Promise<void> {
     this.logger_.debug("[app] Configuring window");
-    const targetId = this.page_.target()._targetInfo.targetId;
+    const targetId = this.page_.target()._targetId;
     assert(this.options_.bgcolor);
     const bgcolor = Color.parse(this.options_.bgcolor);
     assert(bgcolor, "Invalid bgcolor");
@@ -394,9 +405,8 @@ class Window extends EventEmitter implements types.Window {
   }
 
   async evaluate(
-    // deno-lint-ignore ban-types
-    pageFunction: string | Function,
-    ...args: unknown[]
+    pageFunction: string | PageFunction,
+    ...args: PageFunctionArgs
     // deno-lint-ignore no-explicit-any
   ): Promise<any> {
     try {
@@ -444,7 +454,7 @@ class Window extends EventEmitter implements types.Window {
     // Await here to process exceptions.
     await this.page_.goto(
       new URL(this.loadURI_, "https://domain/").toString(),
-      { timeout: 0, waitFor: "domcontentloaded" },
+      { timeout: 0, waitUntil: "domcontentloaded" },
     );
     // Available in Chrome M73+.
     this.session_.send("Page.resetNavigationHistory").catch((_e) => {});
@@ -453,7 +463,7 @@ class Window extends EventEmitter implements types.Window {
     return result;
   }
 
-  initBounds_(result: { windowId: unknown }) {
+  initBounds_(result: { windowId: number }) {
     this.windowId_ = result.windowId;
     return this.setBounds(
       {
@@ -664,7 +674,7 @@ class Window extends EventEmitter implements types.Window {
   }
 
   async fullscreen(): Promise<void> {
-    const bounds = { windowState: "fullscreen" };
+    const bounds = { windowState: "fullscreen" } as const;
     await this.app_.session_.send(
       "Browser.setWindowBounds",
       { windowId: this.windowId_, bounds },
@@ -672,7 +682,7 @@ class Window extends EventEmitter implements types.Window {
   }
 
   async minimize(): Promise<void> {
-    const bounds = { windowState: "minimized" };
+    const bounds = { windowState: "minimized" } as const;
     await this.app_.session_.send(
       "Browser.setWindowBounds",
       { windowId: this.windowId_, bounds },
@@ -680,7 +690,7 @@ class Window extends EventEmitter implements types.Window {
   }
 
   async maximize(): Promise<void> {
-    const bounds = { windowState: "maximized" };
+    const bounds = { windowState: "maximized" } as const;
     await this.app_.session_.send(
       "Browser.setWindowBounds",
       { windowId: this.windowId_, bounds },
@@ -833,9 +843,11 @@ class HostWindow {
       "Runtime.evaluate",
       { expression },
     );
+    const { objectId } = result;
+    assert(objectId != null, "objectId must be set");
     return this.window_.session_.send(
       "DOM.getFileInfo",
-      { objectId: result.objectId },
+      { objectId },
     );
   }
 }

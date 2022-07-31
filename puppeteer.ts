@@ -16,13 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  BrowserWebSocketTransport,
-  BufReader,
-  decode,
-  puppeteer,
-  resolve,
-} from "./deps.ts";
+import { BufReader, decode, puppeteer, resolve } from "./deps.ts";
 import type { Browser, Target } from "./deps.ts";
 import type { AppOptions } from "./types.ts";
 import { getLocalDataDir } from "./util.ts";
@@ -30,21 +24,6 @@ import { getLocalDataDir } from "./util.ts";
 interface LaunchResult {
   browser: Browser;
   chromeProcess: Deno.Process;
-}
-
-class ExtendedBrowserWebSocketTransport extends BrowserWebSocketTransport {
-  #ws: WebSocket;
-
-  constructor(ws: WebSocket) {
-    super(ws);
-    this.#ws = ws;
-  }
-
-  close(): void {
-    if (this.#ws.readyState === this.#ws.OPEN) {
-      super.close();
-    }
-  }
 }
 
 export async function launch(
@@ -58,10 +37,9 @@ export async function launch(
     stderr: "piped",
   });
   const wsEndpoint = await waitForWSEndpoint(chromeProcess.stderr);
-  const transport = await ExtendedBrowserWebSocketTransport.create(wsEndpoint);
   const browser = await puppeteer.connect({
     ignoreHTTPSErrors: true,
-    transport,
+    browserWSEndpoint: wsEndpoint,
   });
   await browser.waitForTarget((t: Target) => t.type() === "page");
   return {

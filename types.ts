@@ -220,10 +220,10 @@ export interface Window {
 }
 
 export interface Bounds {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
+  left?: number;
+  top?: number;
+  width?: number;
+  height?: number;
 }
 
 export interface HttpHandler {
