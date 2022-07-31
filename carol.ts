@@ -230,10 +230,10 @@ class Application extends EventEmitter implements types.Application {
     );
   }
 
-  // deno-lint-ignore no-explicit-any
   evaluate(
     pageFunction: PageFunction | string,
     ...args: PageFunctionArgs
+    // deno-lint-ignore no-explicit-any
   ): Promise<any> {
     return this.mainWindow().evaluate(pageFunction, ...args);
   }
