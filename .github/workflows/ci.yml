@@ -36,5 +36,5 @@ jobs:
       run: chrome --version
     - name: Run tests
       run: |
-        deno task test
+        CAROL_DEBUG=1 deno task test
 
