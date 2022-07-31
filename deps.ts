@@ -27,10 +27,12 @@ export {
   fail,
 } from "https://deno.land/std@0.149.0/testing/asserts.ts";
 
+export {
+  default as puppeteer,
+} from "https://deno.land/x/puppeteer@14.1.1/mod.ts";
 export type {
   Browser,
   CDPSession,
-  default as puppeteer,
   Page,
   Protocol,
   Target,
