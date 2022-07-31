@@ -38,3 +38,4 @@ export type {
   Target,
 } from "https://deno.land/x/puppeteer@14.1.1/mod.ts";
 export { EventEmitter } from "https://deno.land/x/puppeteer@14.1.1/vendor/puppeteer-core/puppeteer/common/EventEmitter.js";
+export { BrowserWebSocketTransport } from "https://deno.land/x/puppeteer@14.1.1/vendor/puppeteer-core/puppeteer/common/BrowserWebSocketTransport.js";
