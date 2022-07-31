@@ -27,11 +27,6 @@ import type { Browser, Target } from "./deps.ts";
 import type { AppOptions } from "./types.ts";
 import { getLocalDataDir } from "./util.ts";
 
-interface LaunchResult {
-  browser: Browser;
-  chromeProcess: Deno.Process;
-}
-
 class ExtendedBrowserWebSocketTransport extends BrowserWebSocketTransport {
   #ws: WebSocket;
 
@@ -40,11 +35,16 @@ class ExtendedBrowserWebSocketTransport extends BrowserWebSocketTransport {
     this.#ws = ws;
   }
 
-  close(): void {
+  async close(): Promise<void> {
     if (this.#ws.readyState === this.#ws.OPEN) {
-      super.close();
+      await super.close();
     }
   }
+}
+
+interface LaunchResult {
+  browser: Browser;
+  chromeProcess: Deno.Process;
 }
 
 export async function launch(
@@ -58,16 +58,24 @@ export async function launch(
     stderr: "piped",
   });
   const wsEndpoint = await waitForWSEndpoint(chromeProcess.stderr);
-  const transport = await ExtendedBrowserWebSocketTransport.create(wsEndpoint);
-  const browser = await puppeteer.connect({
-    ignoreHTTPSErrors: true,
-    transport,
-  });
-  await browser.waitForTarget((t: Target) => t.type() === "page");
-  return {
-    browser,
-    chromeProcess,
-  };
+  try {
+    const transport = await ExtendedBrowserWebSocketTransport.create(
+      wsEndpoint,
+    );
+    const browser = await puppeteer.connect({
+      ignoreHTTPSErrors: true,
+      transport,
+    });
+    await browser.waitForTarget((t: Target) => t.type() === "page");
+    return {
+      browser,
+      chromeProcess,
+    };
+  } catch (error) {
+    console.error(error);
+    chromeProcess.close();
+    throw error;
+  }
 }
 
 function prepareChromeArgs(

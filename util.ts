@@ -1,5 +1,11 @@
 import { dirname, fromFileUrl, join } from "./deps.ts";
 
+export function assert(expr: unknown, msg = ""): asserts expr {
+  if (!expr) {
+    throw new Error("assertion failed: " + msg);
+  }
+}
+
 export function getLocalDataDir(): string {
   const __dirname = import.meta.url.startsWith("file://")
     ? dirname(fromFileUrl(import.meta.url))

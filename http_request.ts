@@ -18,8 +18,13 @@
  */
 
 import { concat, encode, encodeToBase64 } from "./deps.ts";
-import type { CDPSession } from "./deps.ts";
+import type { CDPSession, Protocol } from "./deps.ts";
 import type * as types from "./types.ts";
+import { assert } from "./util.ts";
+
+type ContinueInterceptedRequestRequest = Partial<
+  Protocol.Network.ContinueInterceptedRequestRequest
+>;
 
 const statusTexts = {
   "100": "Continue",
@@ -87,22 +92,14 @@ const statusTexts = {
 export interface HttpRequestParams {
   request: Request;
   resourceType: string;
-  interceptionId: number;
+  interceptionId:
+    Protocol.Network.ContinueInterceptedRequestRequest["interceptionId"];
 }
 
 interface Request {
   url: string;
   method: string;
   headers: Record<string, string>;
-}
-
-interface ResolveParams {
-  url?: string;
-  method?: string;
-  headers?: Record<string, string>;
-  interceptionId?: number;
-  rawResponse?: string;
-  errorReason?: string;
 }
 
 export class HttpRequest implements types.HttpRequest {
@@ -150,7 +147,7 @@ export class HttpRequest implements types.HttpRequest {
 
   deferToBrowser(overrides?: types.Overrides) {
     this.logger_.debug("[server] deferToBrowser", this.url());
-    const params = {} as ResolveParams;
+    const params = {} as ContinueInterceptedRequestRequest;
     if (overrides && overrides.url) params.url = overrides.url;
     if (overrides && overrides.method) params.method = overrides.method;
     if (overrides && overrides.headers) params.headers = overrides.headers;
@@ -207,11 +204,15 @@ export class HttpRequest implements types.HttpRequest {
     this.resolve_({});
   }
 
-  resolve_(params: ResolveParams): Promise<unknown> {
+  resolve_(params: ContinueInterceptedRequestRequest): Promise<unknown> {
     this.logger_.debug("[server] resolve", this.url());
     if (this.done_) throw new Error("Already resolved given request");
     params.interceptionId = this.params_.interceptionId;
     this.done_ = true;
-    return this.session_.send("Network.continueInterceptedRequest", params);
+    assert(params.interceptionId != null);
+    return this.session_.send(
+      "Network.continueInterceptedRequest",
+      params as Protocol.Network.ContinueInterceptedRequestRequest,
+    );
   }
 }
