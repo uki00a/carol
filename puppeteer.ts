@@ -58,16 +58,24 @@ export async function launch(
     stderr: "piped",
   });
   const wsEndpoint = await waitForWSEndpoint(chromeProcess.stderr);
-  const transport = await ExtendedBrowserWebSocketTransport.create(wsEndpoint);
-  const browser = await puppeteer.connect({
-    ignoreHTTPSErrors: true,
-    transport,
-  });
-  await browser.waitForTarget((t: Target) => t.type() === "page");
-  return {
-    browser,
-    chromeProcess,
-  };
+  try {
+    const transport = await ExtendedBrowserWebSocketTransport.create(
+      wsEndpoint,
+    );
+    const browser = await puppeteer.connect({
+      ignoreHTTPSErrors: true,
+      transport,
+    });
+    await browser.waitForTarget((t: Target) => t.type() === "page");
+    return {
+      browser,
+      chromeProcess,
+    };
+  } catch (error) {
+    console.error(error);
+    chromeProcess.close();
+    throw error;
+  }
 }
 
 function prepareChromeArgs(
