@@ -809,7 +809,7 @@ export async function launch(
     } catch (e) {
       logger.error(e);
 
-      const errorMessage = decode(await readAll(chromeProcess.stderr));
+      const errorMessage = decode(await readAll(chromeProcess.stderr!));
       logger.error(errorMessage);
 
       await app.exit();
