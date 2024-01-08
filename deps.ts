@@ -17,14 +17,12 @@ export type { Deferred } from "https://deno.land/std@0.149.0/async/deferred.ts";
 export { readAll } from "https://deno.land/std@0.211.0/streams/read_all.ts";
 export { writeAll } from "https://deno.land/std@0.211.0/streams/write_all.ts";
 
-export {
-  assert,
-  assertEquals,
-  assertRejects,
-  assertStrictEquals,
-  assertStringIncludes,
-  fail,
-} from "https://deno.land/std@0.149.0/assert/mod.ts";
+export { assert } from "https://deno.land/std@0.211.0/assert/assert.ts";
+export { assertEquals } from "https://deno.land/std@0.211.0/assert/assert_equals.ts";
+export { assertRejects } from "https://deno.land/std@0.211.0/assert/assert_rejects.ts";
+export { assertStrictEquals } from "https://deno.land/std@0.211.0/assert/assert_strict_equals.ts";
+export { assertStringIncludes } from "https://deno.land/std@0.211.0/assert/assert_string_includes.ts";
+export { fail } from "https://deno.land/std@0.211.0/assert/fail.ts";
 
 export { default as puppeteer } from "https://unpkg.com/puppeteer@13.3.2/lib/esm/puppeteer/web.js";
 export { EventEmitter } from "https://unpkg.com/puppeteer@13.3.2/lib/esm/puppeteer/common/EventEmitter.js";
