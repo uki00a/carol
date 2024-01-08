@@ -26,7 +26,6 @@ import {
   EventEmitter,
   exists,
   join,
-  readAll,
 } from "./deps.ts";
 import type { Browser, CDPSession, Page, Target } from "./deps.ts";
 import { launch as launchPuppeteer } from "./puppeteer.ts";
@@ -804,17 +803,7 @@ export async function launch(
       options,
     );
     const app = new Application(browser, chromeProcess, logger, options);
-    try {
-      await app.init_();
-    } catch (e) {
-      logger.error(e);
-
-      const errorMessage = decode(await readAll(chromeProcess.stderr!));
-      logger.error(errorMessage);
-
-      await app.exit();
-      throw e;
-    }
+    await app.init_();
     return app;
   } catch (e) {
     if (e.toString().includes("Target closed")) {
