@@ -3,7 +3,7 @@ export { dirname } from "https://deno.land/std@0.211.0/path/dirname.ts";
 export { fromFileUrl } from "https://deno.land/std@0.211.0/path/from_file_url.ts";
 export { join } from "https://deno.land/std@0.211.0/path/join.ts";
 export { resolve } from "https://deno.land/std@0.211.0/path/resolve.ts";
-export { BufReader } from "https://deno.land/std@0.211.0/io/bufio.ts";
+export { BufReader } from "https://deno.land/std@0.211.0/io/buf_reader.ts";
 export { concat } from "https://deno.land/std@0.211.0/bytes/mod.ts";
 // TODO: Remove this import statement.
 export { decode, encode } from "https://deno.land/std@0.84.0/encoding/utf8.ts";
