@@ -36,5 +36,7 @@ jobs:
     - name: Show chrome version
       run: chrome --version
     - name: Run tests
+      env:
+        CAROL_DEBUG: 1
       run: |
         deno task test
