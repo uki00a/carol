@@ -27,10 +27,8 @@
 
 import { exists } from "./deps.ts";
 
-type OS = "darwin" | "linux" | "windows";
-
 export async function locateChrome(
-  os: OS = Deno.build.os,
+  os: typeof Deno.build.os = Deno.build.os,
   env = Deno.env,
 ): Promise<string> {
   let paths!: string[];
