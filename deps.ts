@@ -24,11 +24,11 @@ export { assertStrictEquals } from "https://deno.land/std@0.211.0/assert/assert_
 export { assertStringIncludes } from "https://deno.land/std@0.211.0/assert/assert_string_includes.ts";
 export { fail } from "https://deno.land/std@0.211.0/assert/fail.ts";
 
-export { default as puppeteer } from "https://unpkg.com/puppeteer@13.3.2/lib/esm/puppeteer/web.js";
-export { EventEmitter } from "https://unpkg.com/puppeteer@13.3.2/lib/esm/puppeteer/common/EventEmitter.js";
-export { BrowserWebSocketTransport } from "https://unpkg.com/puppeteer@13.3.2/lib/esm/puppeteer/common/BrowserWebSocketTransport.js";
+export { default as puppeteer } from "https://esm.sh/puppeteer-core@20.1.0/lib/esm/puppeteer/puppeteer-core.js?pin=v135";
+export { EventEmitter } from "https://esm.sh/puppeteer-core@20.1.0/lib/esm/puppeteer/common/EventEmitter.js?pin=v135";
+export { BrowserWebSocketTransport } from "https://esm.sh/puppeteer-core@20.1.0/lib/esm/puppeteer/common/BrowserWebSocketTransport.js?pin=v135";
 
-export type { Browser } from "https://unpkg.com/puppeteer@13.3.2/lib/esm/puppeteer/common/Browser.js";
-export type { Target } from "https://unpkg.com/puppeteer@13.3.2/lib/esm/puppeteer/common/Target.js";
-export type { CDPSession } from "https://unpkg.com/puppeteer@13.3.2/lib/esm/puppeteer/common/Connection.js";
-export type { Page } from "https://unpkg.com/puppeteer@13.3.2/lib/esm/puppeteer/common/Page.js";
+export type { Browser } from "https://esm.sh/puppeteer-core@20.1.0/lib/esm/puppeteer/common/Browser.js?pin=v135";
+export type { Target } from "https://esm.sh/puppeteer-core@20.1.0/lib/esm/puppeteer/common/Target.js?pin=v135";
+export type { CDPSession } from "https://esm.sh/puppeteer-core@20.1.0/lib/esm/puppeteer/common/Connection.js?pin=v135";
+export type { Page } from "https://esm.sh/puppeteer-core@20.1.0/lib/esm/puppeteer/common/Page.js?pin=v135";
