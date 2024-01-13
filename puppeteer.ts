@@ -53,6 +53,7 @@ export async function launch(
   options: AppOptions,
 ): Promise<LaunchResult> {
   const chromeArgs = prepareChromeArgs(executablePath, headless, options);
+  // deno-lint-ignore no-deprecated-deno-api
   const chromeProcess = Deno.run({
     cmd: chromeArgs,
     stderr: "piped",

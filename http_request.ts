@@ -189,7 +189,7 @@ export class HttpRequest implements types.HttpRequest {
     text += CRLF;
     let responseBuffer = encode(text);
     if (body) {
-      responseBuffer = concat(responseBuffer, body);
+      responseBuffer = concat([responseBuffer, body]);
     }
 
     return this.resolve_({

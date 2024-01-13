@@ -13,12 +13,15 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
+    timeout-minutes: 10
     steps:
     - uses: actions/checkout@master
     - uses: denoland/setup-deno@main
       with:
-        deno-version: "1.24.0"
+        deno-version: "1.39.3"
     - uses: browser-actions/setup-chrome@latest
+      with:
+        chrome-version: 113
     - name: Run linter
       if: matrix.os == 'ubuntu-latest'
       run: |
@@ -35,6 +38,7 @@ jobs:
     - name: Show chrome version
       run: chrome --version
     - name: Run tests
+      env:
+        CAROL_DEBUG: 1
       run: |
         deno task test
-

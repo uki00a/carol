@@ -41,6 +41,7 @@ function validateOutput(output: string): void {
 }
 
 async function formatSource(source: string): Promise<string> {
+  // deno-lint-ignore no-deprecated-deno-api
   const deno = Deno.run({
     cmd: [Deno.execPath(), "fmt", "-"],
     stdin: "piped",

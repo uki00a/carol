@@ -108,7 +108,7 @@ export class Color {
       ) {
         return null;
       }
-      const hasAlpha = (values[3] !== undefined);
+      const hasAlpha = values[3] !== undefined;
 
       if (match[1]) { // rgb/rgba
         const rgba = [
