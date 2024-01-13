@@ -32,4 +32,4 @@ export {
   EventEmitter,
   type Page,
   type Target,
-} from "https://esm.sh/puppeteer-core@20.1.0/lib/esm/puppeteer/puppeteer-core.js?pin=v135";
+} from "npm:puppeteer-core@20.1.0"; // "https://esm.sh/puppeteer-core@20.1.0/lib/esm/puppeteer/puppeteer-core.js?pin=v135";
